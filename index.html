@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7f7f4">
+<title>Haushaltsbuch</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css?v=0.1.0">
+</head>
+<body>
+<div id="splash"><div class="powered">powered by</div><div class="viacruz">viacruz</div></div>
+
+<div id="app" class="hidden">
+<header>
+  <div><h1>Haushaltsbuch</h1><p>Ausgaben &amp; Erstattungen</p></div>
+  <button id="menuBtn" class="iconbtn" aria-label="Menü">⋮</button>
+</header>
+
+<main>
+<section id="overview" class="view active">
+  <div class="hero card">
+    <small>DIESER MONAT · NETTO</small>
+    <strong id="monthNet">0,00 €</strong>
+    <span id="monthMeta">0 Ausgaben · 0 Erstattungen</span>
+  </div>
+  <div class="grid">
+    <div class="card"><small>AUSGABEN</small><b id="monthExpenses">0,00 €</b><span>dieser Monat</span></div>
+    <div class="card"><small>ERSTATTUNGEN</small><b id="monthRefunds">0,00 €</b><span>dieser Monat</span></div>
+  </div>
+  <button class="primary big" data-nav="entry">＋ Buchung eintragen</button>
+  <div class="card categoriesCard">
+    <div class="sectionTitle"><b>Kategorien</b><button class="linkBtn" data-nav="categories">Verwalten</button></div>
+    <div id="categorySummary"></div>
+  </div>
+  <details class="recentFold"><summary>Letzte Einträge</summary><div id="recent"></div></details>
+</section>
+
+<section id="entry" class="view">
+  <h2>Buchung eintragen</h2>
+  <form id="entryForm" class="card form">
+    <label>Datum<input id="date" type="date" required></label>
+    <label>Betrag (€)<input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0,00"></label>
+    <label>Kategorie<select id="category" required></select></label>
+    <label>Verwendungszweck<input id="purpose" maxlength="140" placeholder="z. B. Lidl – Einkauf"></label>
+    <div class="dualActions">
+      <button class="primary" type="submit" data-type="expense">Ausgabe eintragen</button>
+      <button class="secondary refundBtn" type="submit" data-type="refund">Erstattung eintragen</button>
+    </div>
+  </form>
+  <div class="hint">Teil-Erstattungen werden als eigene Buchung erfasst. Der ursprüngliche Einkauf bleibt nachvollziehbar.</div>
+</section>
+
+<section id="transactions" class="view">
+  <div class="toolbar"><h2>Ausgabenliste</h2><button id="clearFilters" class="linkBtn">Filter löschen</button></div>
+  <div class="card filters">
+    <label>Monat<input id="monthFilter" type="month"></label>
+    <label>Kategorie<select id="categoryFilter"></select></label>
+  </div>
+  <div id="listTotals" class="netLine"></div>
+  <div id="entries"></div>
+</section>
+
+<section id="categories" class="view">
+  <div class="toolbar"><h2>Kategorien</h2><button id="addCategory" class="roundPlus">＋</button></div>
+  <p class="hint topHint">Eigene Kategorien können angelegt, umbenannt oder deaktiviert werden. Alte Buchungen bleiben erhalten.</p>
+  <div id="categoryList"></div>
+</section>
+
+<section id="analytics" class="view">
+  <h2>Auswertungen</h2>
+  <div class="card filters">
+    <label>Monat<input id="analyticsMonth" type="month"></label>
+  </div>
+  <div id="analyticsTotal" class="hero card compact"></div>
+  <div id="analyticsCategories" class="card"></div>
+</section>
+</main>
+
+<nav>
+<button data-nav="overview" class="active">⌂<span>Übersicht</span></button>
+<button data-nav="entry">＋<span>Eintragen</span></button>
+<button data-nav="transactions">▤<span>Ausgaben</span></button>
+<button data-nav="categories">◉<span>Kategorien</span></button>
+<button data-nav="analytics">▥<span>Auswertung</span></button>
+</nav>
+
+<div id="menu" class="sheet hidden"><div class="sheetbox">
+  <button id="backup">Datensicherung erstellen</button>
+  <label class="filelabel">Datensicherung wiederherstellen<input id="restore" type="file" accept=".json,application/json"></label>
+  <button id="csv">CSV exportieren</button>
+  <button id="print">Drucken / PDF</button>
+  <button id="lockSettings">App-Sperre</button>
+  <button id="about">Über die App</button>
+  <button id="closeMenu">Schließen</button>
+</div></div>
+
+<div id="editBox" class="sheet hidden"><div class="sheetbox">
+  <h2>Eintrag bearbeiten</h2>
+  <form id="editForm" class="form">
+    <input id="editId" type="hidden">
+    <label>Datum<input id="editDate" type="date" required></label>
+    <label>Betrag (€)<input id="editAmount" type="number" min="0.01" step="0.01" required></label>
+    <label>Kategorie<select id="editCategory"></select></label>
+    <label>Verwendungszweck<input id="editPurpose" maxlength="140"></label>
+    <label>Buchungsart<select id="editType"><option value="expense">Ausgabe</option><option value="refund">Erstattung</option></select></label>
+    <button class="primary" type="submit">Änderungen speichern</button>
+  </form>
+  <button id="deleteEntry" class="dangerBtn">Eintrag löschen</button>
+  <button id="closeEdit">Schließen</button>
+</div></div>
+
+<div id="lockBox" class="sheet hidden"><div class="sheetbox">
+  <h2>App-Sperre</h2><p id="lockStatus" class="hint">Ausgeschaltet.</p>
+  <button id="enableLock">App-Sperre einschalten</button>
+  <button id="changePin" class="hidden">PIN ändern</button>
+  <label id="lockDelayWrap" class="hidden">Automatisch sperren<select id="lockDelay"><option value="0">Sofort beim Verlassen</option><option value="1">Nach 1 Minute</option><option value="5">Nach 5 Minuten</option></select></label>
+  <button id="lockNow" class="hidden">Jetzt sperren</button>
+  <button id="disableLock" class="hidden">App-Sperre ausschalten</button>
+  <p class="hint">Die App-Sperre gilt nur auf diesem Gerät und wird nicht in die Datensicherung übernommen.</p>
+  <button id="closeLockBox">Schließen</button>
+</div></div>
+
+<div id="pinScreen" class="pinScreen hidden"><div class="pinCard">
+  <h2>Haushaltsbuch</h2><p>🔒 App gesperrt</p>
+  <input id="pinInput" type="password" inputmode="numeric" maxlength="6" placeholder="PIN">
+  <button id="pinUnlock" class="primary">Entsperren</button>
+  <p id="pinError" class="pinError"></p><small>powered by viacruz</small>
+</div></div>
+
+<div id="aboutBox" class="sheet hidden"><div class="sheetbox about">
+  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.1.0 START</p><hr>
+  <small>powered by</small><b>viacruz</b><p>viacruz.com</p><button id="closeAbout">Schließen</button>
+</div></div>
+</div>
+
+<script src="app.js?v=0.1.0"></script>
+</body></html>
