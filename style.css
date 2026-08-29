@@ -17,3 +17,6 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:7px 7px calc(7px +
 @media(max-width:390px){main{padding-left:12px;padding-right:12px}.grid,.dualActions,.filters{grid-template-columns:1fr}.hero strong{font-size:30px}nav button{font-size:18px}nav button span{font-size:8px}}
 @media(min-width:800px){body{padding-bottom:20px}nav{position:sticky;bottom:auto;top:82px;max-width:720px;margin:0 auto;border:1px solid var(--line);border-radius:16px;padding:5px}main{padding-top:12px}}
 @media print{body{background:#fff;padding:0}header,nav,.view,.sheet,.pinScreen,#splash{display:none!important}#printSheet{display:block!important;color:#111;font-family:Arial,sans-serif;padding:8mm}#printSheet h1{margin:0;font-size:20pt}#printSheet p{margin:3px 0 12px}#printSheet table{width:100%;border-collapse:collapse;font-size:9pt}#printSheet th,#printSheet td{border-bottom:1px solid #ccc;padding:6px;text-align:left}#printSheet th:last-child,#printSheet td:last-child{text-align:right}.printSum{font-weight:bold}.printFooter{margin-top:16px;text-align:center;font-size:8pt;color:#555}}
+
+#printSheet{display:none}
+.toolbarActions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end}

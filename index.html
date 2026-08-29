@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f7f7f4">
 <title>Haushaltsbuch</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=0.1.0">
+<link rel="stylesheet" href="style.css?v=0.1.1">
 </head>
 <body>
 <div id="splash"><div class="powered">powered by</div><div class="viacruz">viacruz</div></div>
@@ -52,7 +52,7 @@
 </section>
 
 <section id="transactions" class="view">
-  <div class="toolbar"><h2>Ausgabenliste</h2><button id="clearFilters" class="linkBtn">Filter löschen</button></div>
+  <div class="toolbar"><h2>Ausgabenliste</h2><div class="toolbarActions"><button id="printFiltered" class="linkBtn">Drucken</button><button id="clearFilters" class="linkBtn">Filter löschen</button></div></div>
   <div class="card filters">
     <label>Monat<input id="monthFilter" type="month"></label>
     <label>Kategorie<select id="categoryFilter"></select></label>
@@ -89,7 +89,6 @@
   <button id="backup">Datensicherung erstellen</button>
   <label class="filelabel">Datensicherung wiederherstellen<input id="restore" type="file" accept=".json,application/json"></label>
   <button id="csv">CSV exportieren</button>
-  <button id="print">Drucken / PDF</button>
   <button id="lockSettings">App-Sperre</button>
   <button id="about">Über die App</button>
   <button id="closeMenu">Schließen</button>
@@ -129,10 +128,10 @@
 </div></div>
 
 <div id="aboutBox" class="sheet hidden"><div class="sheetbox about">
-  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.1.0 START</p><hr>
+  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.1.1 DRUCK KORRIGIERT</p><hr>
   <small>powered by</small><b>viacruz</b><p>viacruz.com</p><button id="closeAbout">Schließen</button>
 </div></div>
 </div>
 
-<script src="app.js?v=0.1.0"></script>
+<script src="app.js?v=0.1.1"></script>
 </body></html>
