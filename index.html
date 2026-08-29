@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f7f7f4">
 <title>Haushaltsbuch</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=0.1.1">
+<link rel="stylesheet" href="style.css?v=0.1.2">
 </head>
 <body>
 <div id="splash"><div class="powered">powered by</div><div class="viacruz">viacruz</div></div>
@@ -41,7 +41,12 @@
   <form id="entryForm" class="card form">
     <label>Datum<input id="date" type="date" required></label>
     <label>Betrag (€)<input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0,00"></label>
-    <label>Kategorie<select id="category" required></select></label>
+    <label>Kategorie
+      <div class="categoryInputRow">
+        <select id="category" required></select>
+        <button id="addCategoryEntry" class="categoryPlus" type="button" aria-label="Neue Kategorie">＋</button>
+      </div>
+    </label>
     <label>Verwendungszweck<input id="purpose" maxlength="140" placeholder="z. B. Lidl – Einkauf"></label>
     <div class="dualActions">
       <button class="primary" type="submit" data-type="expense">Ausgabe eintragen</button>
@@ -73,7 +78,7 @@
     <label>Monat<input id="analyticsMonth" type="month"></label>
   </div>
   <div id="analyticsTotal" class="hero card compact"></div>
-  <div id="analyticsCategories" class="card"></div>
+  <div id="analyticsCategories" class="card"></div><div id="analyticsDetail"></div>
 </section>
 </main>
 
@@ -100,7 +105,12 @@
     <input id="editId" type="hidden">
     <label>Datum<input id="editDate" type="date" required></label>
     <label>Betrag (€)<input id="editAmount" type="number" min="0.01" step="0.01" required></label>
-    <label>Kategorie<select id="editCategory"></select></label>
+    <label>Kategorie
+      <div class="categoryInputRow">
+        <select id="editCategory"></select>
+        <button id="addCategoryEdit" class="categoryPlus" type="button" aria-label="Neue Kategorie">＋</button>
+      </div>
+    </label>
     <label>Verwendungszweck<input id="editPurpose" maxlength="140"></label>
     <label>Buchungsart<select id="editType"><option value="expense">Ausgabe</option><option value="refund">Erstattung</option></select></label>
     <button class="primary" type="submit">Änderungen speichern</button>
@@ -128,10 +138,10 @@
 </div></div>
 
 <div id="aboutBox" class="sheet hidden"><div class="sheetbox about">
-  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.1.1 DRUCK KORRIGIERT</p><hr>
+  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.1.2 AUSWERTUNG & KATEGORIEN</p><hr>
   <small>powered by</small><b>viacruz</b><p>viacruz.com</p><button id="closeAbout">Schließen</button>
 </div></div>
 </div>
 
-<script src="app.js?v=0.1.1"></script>
+<script src="app.js?v=0.1.2"></script>
 </body></html>

@@ -20,3 +20,17 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:7px 7px calc(7px +
 
 #printSheet{display:none}
 .toolbarActions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+
+.categoryInputRow{display:grid;grid-template-columns:minmax(0,1fr) 48px;gap:8px;align-items:center}
+.categoryPlus{width:48px;height:46px;min-height:46px;padding:0;border-radius:12px;background:#fff;color:var(--green);border:1px solid #8fc5a6;font-size:25px;font-weight:800;line-height:1}
+.analyticsRow.clickable{cursor:pointer;border-radius:12px;padding:9px 8px;margin:4px -8px}
+.analyticsRow.clickable:hover{background:#f3f7f4}
+.analyticsRow.clickable.active{background:#edf7f0}
+.analyticsChevron{color:var(--green);font-weight:900;margin-left:7px}
+.analyticsDetailCard{margin-top:12px}
+.analyticsDetailHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.analyticsDetailHeader h3{margin:0;font-size:18px}
+.analyticsDetailHeader p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.analyticsPrintBtn{color:var(--green);font-weight:800;white-space:nowrap;min-height:40px;padding:8px 12px}
+.detailTotal{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);margin-top:10px;padding-top:12px;font-weight:800}
+@media(max-width:390px){.analyticsDetailHeader{align-items:stretch;flex-direction:column}.analyticsPrintBtn{width:100%}}
