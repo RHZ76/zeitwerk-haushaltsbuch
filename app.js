@@ -18,14 +18,51 @@ function refundTotal(list){return list.filter(e=>e.type==='refund').reduce((a,e)
 function nav(id){$$('.view').forEach(v=>v.classList.toggle('active',v.id===id));$$('nav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===id));render()}
 $$('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));
 
-function options(includeInactive=false,all=false){let cs=state.categories.filter(c=>includeInactive||c.active);return (all?'<option value="all">Alle Kategorien</option>':'')+cs.map(c=>`<option value="${c.id}">${esc(c.name)}${c.active?'':' (inaktiv)'}</option>`).join('')}
-function syncSelects(){let current=$('#category').value, edit=$('#editCategory').value, filter=$('#categoryFilter').value;$('#category').innerHTML=options();$('#editCategory').innerHTML=options(true);$('#categoryFilter').innerHTML=options(true,true);if(current&&catById(current)?.active)$('#category').value=current;if(edit&&catById(edit))$('#editCategory').value=edit;if(filter==='all'||catById(filter))$('#categoryFilter').value=filter}
+function options(includeInactive=false,all=false){let cs=state.categories;return (all?'<option value="all">Alle Kategorien</option>':'')+cs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}
+function syncSelects(){let current=$('#category').value, edit=$('#editCategory').value, filter=$('#categoryFilter').value;$('#category').innerHTML=options();$('#editCategory').innerHTML=options(true);$('#categoryFilter').innerHTML=options(true,true);if(current&&catById(current))$('#category').value=current;if(edit&&catById(edit))$('#editCategory').value=edit;if(filter==='all'||catById(filter))$('#categoryFilter').value=filter}
 function rowHTML(e){let c=catById(e.categoryId), sign=e.type==='refund'?'+':'−';return `<div class="row" data-id="${e.id}"><div class="rowtop"><div><b>${esc(e.purpose||c?.name||'Buchung')}</b><div class="meta">${dateDE(e.date)} · ${esc(c?.name||'Unbekannte Kategorie')}</div></div><div class="money ${e.type}">${sign}${euro(e.amount)}</div></div><span class="badge ${e.type}">${e.type==='refund'?'Erstattung':'Ausgabe'}</span></div>`}
 function bindRows(root=document){root.querySelectorAll('.row[data-id]').forEach(r=>r.onclick=()=>openEdit(r.dataset.id))}
 function filtered(monthEl='#monthFilter',catEl='#categoryFilter'){let m=$(monthEl)?.value||ymNow(),c=$(catEl)?.value||'all';return state.entries.filter(e=>(!m||e.date.startsWith(m))&&(c==='all'||e.categoryId===c))}
-function renderOverview(){let m=ymNow(), list=state.entries.filter(e=>e.date.startsWith(m));$('#monthNet').textContent=euro(Math.abs(net(list)));$('#monthMeta').textContent=`${list.filter(e=>e.type==='expense').length} Ausgaben · ${list.filter(e=>e.type==='refund').length} Erstattungen`;$('#monthExpenses').textContent=euro(expenseTotal(list));$('#monthRefunds').textContent=euro(refundTotal(list));let sums=state.categories.filter(c=>c.active).map(c=>({c,v:Math.abs(net(list.filter(e=>e.categoryId===c.id)))})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,6);$('#categorySummary').innerHTML=sums.length?sums.map(x=>`<div class="catSummaryRow"><div class="catLeft"><i class="catDot"></i><span class="catName">${esc(x.c.name)}</span></div><span class="catAmount">${euro(x.v)}</span></div>`).join(''):'<div class="hint">Noch keine Buchungen in diesem Monat.</div>';let recent=[...state.entries].sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created).slice(0,4);$('#recent').innerHTML=recent.length?recent.map(rowHTML).join(''):'<div class="hint">Noch keine Einträge gespeichert.</div>';bindRows($('#recent'))}
+function renderOverview(){let m=ymNow(), list=state.entries.filter(e=>e.date.startsWith(m));$('#monthNet').textContent=euro(Math.abs(net(list)));$('#monthMeta').textContent=`${list.filter(e=>e.type==='expense').length} Ausgaben · ${list.filter(e=>e.type==='refund').length} Erstattungen`;$('#monthExpenses').textContent=euro(expenseTotal(list));$('#monthRefunds').textContent=euro(refundTotal(list));let sums=state.categories.map(c=>({c,v:Math.abs(net(list.filter(e=>e.categoryId===c.id)))})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,6);$('#categorySummary').innerHTML=sums.length?sums.map(x=>`<div class="catSummaryRow"><div class="catLeft"><i class="catDot"></i><span class="catName">${esc(x.c.name)}</span></div><span class="catAmount">${euro(x.v)}</span></div>`).join(''):'<div class="hint">Noch keine Buchungen in diesem Monat.</div>';let recent=[...state.entries].sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created).slice(0,4);$('#recent').innerHTML=recent.length?recent.map(rowHTML).join(''):'<div class="hint">Noch keine Einträge gespeichert.</div>';bindRows($('#recent'))}
 function renderTransactions(){let list=filtered().sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created);$('#listTotals').textContent=`Ausgaben ${euro(expenseTotal(list))} · Erstattungen ${euro(refundTotal(list))} · Netto ${euro(Math.abs(net(list)))}`;$('#entries').innerHTML=list.length?list.map(rowHTML).join(''):'<div class="hint">Für diesen Filter gibt es keine Einträge.</div>';bindRows($('#entries'))}
-function renderCategories(){let list=state.categories;$('#categoryList').innerHTML=list.map(c=>`<div class="card catManageRow ${c.active?'':'mutedCat'}" data-cat="${c.id}"><div class="catLeft"><i class="catDot"></i><div><b>${esc(c.name)}</b><div class="meta">${c.active?'Aktiv':'Inaktiv'}</div></div></div><div><button data-cat-action="rename">Bearbeiten</button> <button data-cat-action="toggle">${c.active?'Deaktivieren':'Aktivieren'}</button></div></div>`).join('');$$('[data-cat-action]').forEach(b=>b.onclick=e=>{e.stopPropagation();let id=b.closest('[data-cat]').dataset.cat,c=catById(id);if(b.dataset.catAction==='rename'){let n=prompt('Kategorie umbenennen:',c.name);if(n&&n.trim()){c.name=n.trim();save()}}else{c.active=!c.active;save()}})}
+function renderCategories(){
+  let list=state.categories;
+  $('#categoryList').innerHTML=list.map(c=>`<div class="card catManageRow" data-cat="${c.id}">
+    <div class="catLeft"><i class="catDot"></i><div><b>${esc(c.name)}</b></div></div>
+    <div>
+      <button data-cat-action="rename">Bearbeiten</button>
+      <button data-cat-action="delete" class="dangerBtn">Löschen</button>
+    </div>
+  </div>`).join('');
+
+  $$('[data-cat-action]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    let id=b.closest('[data-cat]').dataset.cat,c=catById(id);
+    if(!c)return;
+
+    if(b.dataset.catAction==='rename'){
+      let n=prompt('Kategorie umbenennen:',c.name);
+      if(n&&n.trim()){
+        let name=n.trim();
+        let duplicate=state.categories.some(x=>x.id!==id&&x.name.toLocaleLowerCase('de-DE')===name.toLocaleLowerCase('de-DE'));
+        if(duplicate)return alert('Diese Kategorie gibt es bereits.');
+        c.name=name;
+        save();
+      }
+    } else {
+      let used=state.entries.filter(x=>x.categoryId===id).length;
+      if(used>0){
+        alert(`Die Kategorie „${c.name}“ kann nicht gelöscht werden, weil noch ${used} ${used===1?'Buchung':'Buchungen'} damit gespeichert ${used===1?'ist':'sind'}.\n\nBitte diese Buchungen zuerst bearbeiten oder löschen. So gehen keine Haushaltsdaten verloren.`);
+        return;
+      }
+      if(confirm(`Kategorie „${c.name}“ wirklich löschen?`)){
+        state.categories=state.categories.filter(x=>x.id!==id);
+        if(openAnalyticsCategoryId===id)openAnalyticsCategoryId=null;
+        save();
+      }
+    }
+  });
+}
 function renderAnalytics(){
   let m=$('#analyticsMonth').value||ymNow(),
       list=state.entries.filter(e=>e.date.startsWith(m)),
@@ -83,7 +120,6 @@ function createCategoryAndSelect(targetSelectId){
   n=n.trim();
   let existing=state.categories.find(c=>c.name.toLocaleLowerCase('de-DE')===n.toLocaleLowerCase('de-DE'));
   if(existing){
-    if(!existing.active)existing.active=true;
     save();
     if(targetSelectId&&document.querySelector(targetSelectId))document.querySelector(targetSelectId).value=existing.id;
     return;
@@ -102,7 +138,7 @@ $('#deleteEntry').onclick=()=>{let id=$('#editId').value;if(confirm('Diesen Eint
 $('#closeEdit').onclick=()=>$('#editBox').classList.add('hidden');
 $('#menuBtn').onclick=()=>$('#menu').classList.remove('hidden');$('#closeMenu').onclick=()=>$('#menu').classList.add('hidden');$('#about').onclick=()=>{$('#menu').classList.add('hidden');$('#aboutBox').classList.remove('hidden')};$('#closeAbout').onclick=()=>$('#aboutBox').classList.add('hidden');
 function download(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.1.2',exported:new Date().toISOString(),data:state},null,2),'application/json');
+$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.1.3',exported:new Date().toISOString(),data:state},null,2),'application/json');
 $('#restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.app!=='Haushaltsbuch'||!x.data||!Array.isArray(x.data.entries)||!Array.isArray(x.data.categories))throw 0;if(confirm('Datensicherung wiederherstellen? Aktuelle Daten werden ersetzt.')){state=x.data;save();alert('Datensicherung wurde wiederhergestellt.')}}catch(_){alert('Diese Datei ist keine gültige Haushaltsbuch-Datensicherung.')}e.target.value=''};
 $('#csv').onclick=()=>{let rows=[['Datum','Buchungsart','Betrag','Kategorie','Verwendungszweck'],...state.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='refund'?'Erstattung':'Ausgabe',String(e.amount).replace('.',','),catById(e.categoryId)?.name||'',e.purpose||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');download(`haushaltsbuch-${today()}.csv`,csv,'text/csv;charset=utf-8')};
 $('#printFiltered').onclick=()=>printReport();
