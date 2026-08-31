@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#f7f7f4">
 <title>Haushaltsbuch</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=0.1.9">
+<link rel="stylesheet" href="style.css?v=0.2.0">
 </head>
 <body>
 <div id="splash"><div class="powered">powered by</div><div class="viacruz">viacruz</div></div>
@@ -62,7 +62,7 @@
 <section id="transactions" class="view">
   <div class="toolbar"><h2>Ausgabenliste</h2><div class="toolbarActions"><button id="printFiltered" class="linkBtn">Drucken</button><button id="clearFilters" class="linkBtn">Filter löschen</button></div></div>
   <div class="card filters">
-    <label>Monat<input id="monthFilter" type="month"></label>
+    <label>Monat<select id="monthFilter" aria-label="Monat"></select></label>
     <label>Kategorie<select id="categoryFilter"></select></label>
   </div>
   <div id="listTotals" class="netLine"></div>
@@ -149,10 +149,10 @@
 </div></div>
 
 <div id="aboutBox" class="sheet hidden"><div class="sheetbox about">
-  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.1.9 FILTER-RASTER FINAL</p><hr>
+  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.2.0 IOS-MONAT-SELECT</p><hr>
   <small>powered by</small><b>viacruz</b><p>viacruz.com</p><button id="closeAbout">Schließen</button>
 </div></div>
 </div>
 
-<script src="app.js?v=0.1.9"></script>
+<script src="app.js?v=0.2.0"></script>
 </body></html>
