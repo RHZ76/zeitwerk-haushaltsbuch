@@ -108,3 +108,46 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:7px 7px calc(7px +
 .analyticsPieLegendName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .analyticsPieLegendValue{font-weight:800;white-space:nowrap}
 .analyticsPieEmpty{text-align:center;color:var(--muted);font-size:13px;padding:18px 8px}
+
+/* v0.1.8 – iPhone/Safari: Filter „Monat / Kategorie“ auf Ausgaben exakt 50/50 */
+#view-list .filters{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:12px;
+  width:100%;
+  box-sizing:border-box;
+  overflow:hidden;
+}
+#view-list .filters > label{
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+  overflow:hidden;
+}
+#view-list .filters > label > select,
+#view-list .filters > label > input{
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+  margin:0;
+  border-radius:12px;
+}
+
+/* Safari/iOS gibt select/month sonst teilweise eine eigene intrinsische Mindestbreite */
+@supports (-webkit-touch-callout:none){
+  #view-list .filters > label > select,
+  #view-list .filters > label > input{
+    -webkit-appearance:none;
+    appearance:none;
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    padding-left:14px;
+    padding-right:34px;
+    background-position:right 12px center;
+  }
+}
