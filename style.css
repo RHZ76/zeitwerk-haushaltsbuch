@@ -231,3 +231,9 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:7px 7px calc(7px +
 .expenseSummaryItem strong{display:block;font-size:13px;line-height:1.2;white-space:nowrap}
 .expenseSummaryItem.total{background:#eef8f1;border-color:#b9ddc4}
 .expenseSummaryItem.total span,.expenseSummaryItem.total strong{color:var(--green);font-weight:800}
+
+
+/* v0.2.2 – Datensicherung wiederherstellen im Menü wie die übrigen blauen Aktionen */
+#restore{
+  color:#0a66c2 !important;
+}
