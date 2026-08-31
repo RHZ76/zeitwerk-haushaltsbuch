@@ -222,3 +222,12 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:7px 7px calc(7px +
   font-size:16px !important;
   background:#fff !important;
 }
+
+/* v0.2.1 – Ausgaben / Erstattungen / Gesamt */
+#listTotals{margin-top:12px}
+.expenseSummaryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+.expenseSummaryItem{min-width:0;padding:11px 4px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:center}
+.expenseSummaryItem span{display:block;margin-bottom:4px;color:var(--muted);font-size:10.5px;line-height:1.15;white-space:nowrap}
+.expenseSummaryItem strong{display:block;font-size:13px;line-height:1.2;white-space:nowrap}
+.expenseSummaryItem.total{background:#eef8f1;border-color:#b9ddc4}
+.expenseSummaryItem.total span,.expenseSummaryItem.total strong{color:var(--green);font-weight:800}

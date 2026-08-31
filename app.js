@@ -53,7 +53,11 @@ function populateMonthFilter(){
 
 function filtered(monthEl='#monthFilter',catEl='#categoryFilter'){let m=$(monthEl)?.value||ymNow(),c=$(catEl)?.value||'all';return state.entries.filter(e=>(!m||e.date.startsWith(m))&&(c==='all'||e.categoryId===c))}
 function renderOverview(){let m=ymNow(), list=state.entries.filter(e=>e.date.startsWith(m));$('#monthNet').textContent=euro(Math.abs(net(list)));$('#monthMeta').textContent=`${list.filter(e=>e.type==='expense').length} Ausgaben · ${list.filter(e=>e.type==='refund').length} Erstattungen`;$('#monthExpenses').textContent=euro(expenseTotal(list));$('#monthRefunds').textContent=euro(refundTotal(list));let sums=state.categories.map(c=>({c,v:Math.abs(net(list.filter(e=>e.categoryId===c.id)))})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,6);$('#categorySummary').innerHTML=sums.length?sums.map(x=>`<div class="catSummaryRow"><div class="catLeft"><i class="catDot"></i><span class="catName">${esc(x.c.name)}</span></div><span class="catAmount">${euro(x.v)}</span></div>`).join(''):'<div class="hint">Noch keine Buchungen in diesem Monat.</div>';let recent=[...state.entries].sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created).slice(0,4);$('#recent').innerHTML=recent.length?recent.map(rowHTML).join(''):'<div class="hint">Noch keine Einträge gespeichert.</div>';bindRows($('#recent'))}
-function renderTransactions(){populateMonthFilter();let list=filtered().sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created);$('#listTotals').textContent=`Ausgaben ${euro(expenseTotal(list))} · Erstattungen ${euro(refundTotal(list))} · Netto ${euro(Math.abs(net(list)))}`;$('#entries').innerHTML=list.length?list.map(rowHTML).join(''):'<div class="hint">Für diesen Filter gibt es keine Einträge.</div>';bindRows($('#entries'))}
+function renderTransactions(){populateMonthFilter();let list=filtered().sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created);$('#listTotals').innerHTML=`<div class="expenseSummaryGrid">
+  <div class="expenseSummaryItem"><span>Ausgaben</span><strong>${euro(expenseTotal(list))}</strong></div>
+  <div class="expenseSummaryItem"><span>Erstattungen</span><strong>${euro(refundTotal(list))}</strong></div>
+  <div class="expenseSummaryItem total"><span>Gesamt</span><strong>${euro(Math.abs(net(list)))}</strong></div>
+</div>`;$('#entries').innerHTML=list.length?list.map(rowHTML).join(''):'<div class="hint">Für diesen Filter gibt es keine Einträge.</div>';bindRows($('#entries'))}
 function renderCategories(){
   let list=state.categories;
   $('#categoryList').innerHTML=list.map(c=>`<div class="card catManageRow" data-cat="${c.id}">
@@ -96,7 +100,7 @@ function renderAnalytics(){
   let m=$('#analyticsMonth').value||ymNow(),
       list=state.entries.filter(e=>e.date.startsWith(m)),
       total=Math.abs(net(list));
-  $('#analyticsTotal').innerHTML=`<small>NETTOAUSGABEN</small><strong>${euro(total)}</strong><span>Ausgaben ${euro(expenseTotal(list))} · Erstattungen ${euro(refundTotal(list))}</span>`;
+  $('#analyticsTotal').innerHTML=`<small>GESAMTAUSGABEN</small><strong>${euro(total)}</strong><span>Ausgaben ${euro(expenseTotal(list))} · Erstattungen ${euro(refundTotal(list))}</span>`;
 
   let sums=state.categories
     .map(c=>({c,v:Math.abs(net(list.filter(e=>e.categoryId===c.id)))}))
@@ -129,7 +133,7 @@ function renderAnalyticsPie(sums){
 
   if(!positive.length||total<=0){
     pie.style.background='#e8ece9';
-    center.innerHTML='<b>0,00 €</b><span>Nettoausgaben</span>';
+    center.innerHTML='<b>0,00 €</b><span>Gesamtausgaben</span>';
     legend.innerHTML='<div class="analyticsPieEmpty">Noch keine Ausgaben für diesen Monat.</div>';
     return;
   }
@@ -143,7 +147,7 @@ function renderAnalyticsPie(sums){
     start=end;
   });
   pie.style.background=`conic-gradient(${parts.join(',')})`;
-  center.innerHTML=`<b>${euro(total)}</b><span>Nettoausgaben</span>`;
+  center.innerHTML=`<b>${euro(total)}</b><span>Gesamtausgaben</span>`;
 
   legend.innerHTML=positive.map((x,i)=>{
     let pct=(x.v/total*100);
@@ -168,7 +172,7 @@ function renderAnalyticsDetail(month,list){
       <button id="printAnalyticsCategory" class="analyticsPrintBtn">Drucken</button>
     </div>
     <div>${rows.map(rowHTML).join('')}</div>
-    <div class="detailTotal"><span>Netto ${esc(c.name)}</span><span>${euro(Math.abs(net(rows)))}</span></div>
+    <div class="detailTotal"><span>Gesamt ${esc(c.name)}</span><span>${euro(Math.abs(net(rows)))}</span></div>
   </div>`;
   bindRows(box);
   $('#printAnalyticsCategory').onclick=()=>printAnalyticsCategory(month,c.id);
@@ -202,7 +206,7 @@ $('#deleteEntry').onclick=()=>{let id=$('#editId').value;if(confirm('Diesen Eint
 $('#closeEdit').onclick=()=>$('#editBox').classList.add('hidden');
 $('#menuBtn').onclick=()=>$('#menu').classList.remove('hidden');$('#closeMenu').onclick=()=>$('#menu').classList.add('hidden');$('#about').onclick=()=>{$('#menu').classList.add('hidden');$('#aboutBox').classList.remove('hidden')};$('#closeAbout').onclick=()=>$('#aboutBox').classList.add('hidden');
 function download(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.2.0',exported:new Date().toISOString(),data:state},null,2),'application/json');
+$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.2.1',exported:new Date().toISOString(),data:state},null,2),'application/json');
 $('#restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.app!=='Haushaltsbuch'||!x.data||!Array.isArray(x.data.entries)||!Array.isArray(x.data.categories))throw 0;if(confirm('Datensicherung wiederherstellen? Aktuelle Daten werden ersetzt.')){state=x.data;save();alert('Datensicherung wurde wiederhergestellt.')}}catch(_){alert('Diese Datei ist keine gültige Haushaltsbuch-Datensicherung.')}e.target.value=''};
 $('#csv').onclick=()=>{let rows=[['Datum','Buchungsart','Betrag','Kategorie','Verwendungszweck'],...state.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='refund'?'Erstattung':'Ausgabe',String(e.amount).replace('.',','),catById(e.categoryId)?.name||'',e.purpose||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');download(`haushaltsbuch-${today()}.csv`,csv,'text/csv;charset=utf-8')};
 $('#printFiltered').onclick=()=>printReport();
@@ -219,12 +223,12 @@ function printAnalyticsCategory(month,categoryId){
     <p>${esc(c.name)} · ${esc(monthName)}</p>
     <table><thead><tr><th>Datum</th><th>Verwendungszweck</th><th>Art</th><th>Betrag</th></tr></thead>
     <tbody>${list.map(e=>`<tr><td>${dateDE(e.date)}</td><td>${esc(e.purpose)}</td><td>${e.type==='refund'?'Erstattung':'Ausgabe'}</td><td>${e.type==='refund'?'+':'−'}${euro(e.amount)}</td></tr>`).join('')}
-    <tr class="printSum"><td colspan="3">Netto ${esc(c.name)}</td><td>${euro(Math.abs(net(list)))}</td></tr></tbody></table>
+    <tr class="printSum"><td colspan="3">Gesamt ${esc(c.name)}</td><td>${euro(Math.abs(net(list)))}</td></tr></tbody></table>
     <div class="printFooter">powered by viacruz · viacruz.com</div>`;
   document.body.appendChild(s);
   setTimeout(()=>window.print(),250);
 }
-function printReport(){let list=filtered().sort((a,b)=>a.date.localeCompare(b.date));let m=$('#monthFilter').value||ymNow(),cat=$('#categoryFilter').value,catName=cat==='all'?'Alle Kategorien':catById(cat)?.name||'';let old=$('#printSheet');if(old)old.remove();let s=document.createElement('section');s.id='printSheet';s.innerHTML=`<h1>Haushaltsbuch</h1><p>${m} · ${esc(catName)}</p><table><thead><tr><th>Datum</th><th>Kategorie</th><th>Verwendungszweck</th><th>Art</th><th>Betrag</th></tr></thead><tbody>${list.map(e=>`<tr><td>${dateDE(e.date)}</td><td>${esc(catById(e.categoryId)?.name||'')}</td><td>${esc(e.purpose)}</td><td>${e.type==='refund'?'Erstattung':'Ausgabe'}</td><td>${e.type==='refund'?'+':'−'}${euro(e.amount)}</td></tr>`).join('')}<tr class="printSum"><td colspan="4">Netto</td><td>${euro(Math.abs(net(list)))}</td></tr></tbody></table><div class="printFooter">powered by viacruz · viacruz.com</div>`;document.body.appendChild(s);setTimeout(()=>window.print(),250)}
+function printReport(){let list=filtered().sort((a,b)=>a.date.localeCompare(b.date));let m=$('#monthFilter').value||ymNow(),cat=$('#categoryFilter').value,catName=cat==='all'?'Alle Kategorien':catById(cat)?.name||'';let old=$('#printSheet');if(old)old.remove();let s=document.createElement('section');s.id='printSheet';s.innerHTML=`<h1>Haushaltsbuch</h1><p>${m} · ${esc(catName)}</p><table><thead><tr><th>Datum</th><th>Kategorie</th><th>Verwendungszweck</th><th>Art</th><th>Betrag</th></tr></thead><tbody>${list.map(e=>`<tr><td>${dateDE(e.date)}</td><td>${esc(catById(e.categoryId)?.name||'')}</td><td>${esc(e.purpose)}</td><td>${e.type==='refund'?'Erstattung':'Ausgabe'}</td><td>${e.type==='refund'?'+':'−'}${euro(e.amount)}</td></tr>`).join('')}<tr class="printSum"><td colspan="4">Gesamt</td><td>${euro(Math.abs(net(list)))}</td></tr></tbody></table><div class="printFooter">powered by viacruz · viacruz.com</div>`;document.body.appendChild(s);setTimeout(()=>window.print(),250)}
 $('#lockSettings').onclick=()=>{$('#menu').classList.add('hidden');$('#lockBox').classList.remove('hidden')};$('#closeLockBox').onclick=()=>$('#lockBox').classList.add('hidden');
 (()=>{try{let st={enabled:false,pin:'',delay:1,lastHidden:0};try{st={...st,...JSON.parse(localStorage.getItem(LOCK)||'{}')}}catch(e){}const saveL=()=>localStorage.setItem(LOCK,JSON.stringify(st));const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return String(h>>>0)};const valid=p=>/^\d{4,6}$/.test(p);function refresh(){let on=st.enabled;$('#lockStatus').textContent=on?'Eingeschaltet.':'Ausgeschaltet.';$('#enableLock').classList.toggle('hidden',on);['changePin','lockDelayWrap','lockNow','disableLock'].forEach(id=>$('#'+id).classList.toggle('hidden',!on));$('#lockDelay').value=String(st.delay)}function newPin(){let a=prompt('Neue PIN festlegen (4 bis 6 Ziffern):','');if(a===null)return null;if(!valid(a)){alert('Bitte 4 bis 6 Ziffern eingeben.');return null}let b=prompt('PIN noch einmal eingeben:','');if(a!==b){alert('Die PIN-Eingaben stimmen nicht überein.');return null}return a}function current(){let p=prompt('Aktuelle PIN eingeben:','');return p!==null&&hash(p)===st.pin}function lock(){if(st.enabled)$('#pinScreen').classList.remove('hidden')}function unlock(){if(hash($('#pinInput').value)===st.pin){$('#pinScreen').classList.add('hidden');$('#pinInput').value='';$('#pinError').textContent=''}else $('#pinError').textContent='PIN nicht richtig.'}$('#enableLock').onclick=()=>{let p=newPin();if(!p)return;st.enabled=true;st.pin=hash(p);saveL();refresh()};$('#changePin').onclick=()=>{if(!current())return alert('PIN nicht richtig.');let p=newPin();if(p){st.pin=hash(p);saveL();alert('PIN geändert.')}};$('#disableLock').onclick=()=>{if(!current())return alert('PIN nicht richtig.');if(confirm('App-Sperre wirklich ausschalten?')){st={enabled:false,pin:'',delay:1,lastHidden:0};saveL();refresh();$('#pinScreen').classList.add('hidden')}};$('#lockNow').onclick=lock;$('#lockDelay').onchange=()=>{st.delay=Number($('#lockDelay').value);saveL()};$('#pinUnlock').onclick=unlock;$('#pinInput').onkeydown=e=>{if(e.key==='Enter')unlock()};document.addEventListener('visibilitychange',()=>{if(document.hidden){st.lastHidden=Date.now();saveL()}else if(st.enabled&&st.lastHidden&&Date.now()-st.lastHidden>=st.delay*60000)lock()});refresh();if(st.enabled)lock()}catch(e){console.error('Lokale App-Sperre deaktiviert:',e)}})();
 render();
