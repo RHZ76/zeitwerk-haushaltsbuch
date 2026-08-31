@@ -89,3 +89,22 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:7px 7px calc(7px +
     padding:0;
   }
 }
+
+
+/* v0.1.7 – Kreisdiagramm in der Monatsauswertung */
+.analyticsPieCard{overflow:hidden}
+.analyticsPieTitle{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.analyticsPieTitle b{font-size:16px}
+.analyticsPieTitle span{font-size:12px;color:var(--muted)}
+.analyticsPieWrap{position:relative;width:min(230px,72vw);aspect-ratio:1;margin:2px auto 16px}
+.analyticsPie{width:100%;height:100%;border-radius:50%;background:#e8ece9;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
+.analyticsPie::after{content:"";position:absolute;inset:25%;border-radius:50%;background:var(--card,#fff);box-shadow:0 0 0 1px rgba(0,0,0,.03)}
+.analyticsPieCenter{position:absolute;inset:28%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:2;pointer-events:none}
+.analyticsPieCenter b{font-size:18px}
+.analyticsPieCenter span{font-size:11px;color:var(--muted);margin-top:2px}
+.analyticsPieLegend{display:grid;gap:8px}
+.analyticsPieLegendRow{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:13px}
+.analyticsPieLegendDot{width:10px;height:10px;border-radius:50%}
+.analyticsPieLegendName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.analyticsPieLegendValue{font-weight:800;white-space:nowrap}
+.analyticsPieEmpty{text-align:center;color:var(--muted);font-size:13px;padding:18px 8px}

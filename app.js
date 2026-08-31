@@ -75,6 +75,7 @@ function renderAnalytics(){
     .sort((a,b)=>b.v-a.v);
 
   let max=Math.max(1,...sums.map(x=>x.v));
+  renderAnalyticsPie(sums);
   $('#analyticsCategories').innerHTML=sums.length
     ? sums.map(x=>`<div class="analyticsRow clickable ${openAnalyticsCategoryId===x.c.id?'active':''}" data-analytics-cat="${x.c.id}">
         <div class="analyticsTop"><b>${esc(x.c.name)}</b><span>${euro(x.v)} <i class="analyticsChevron">›</i></span></div>
@@ -89,6 +90,40 @@ function renderAnalytics(){
   });
 
   renderAnalyticsDetail(m,list);
+}
+function renderAnalyticsPie(sums){
+  let pie=$('#analyticsPie'),legend=$('#analyticsPieLegend'),center=$('#analyticsPieCenter');
+  if(!pie||!legend||!center)return;
+
+  let positive=sums.filter(x=>x.v>0);
+  let total=positive.reduce((s,x)=>s+x.v,0);
+
+  if(!positive.length||total<=0){
+    pie.style.background='#e8ece9';
+    center.innerHTML='<b>0,00 €</b><span>Nettoausgaben</span>';
+    legend.innerHTML='<div class="analyticsPieEmpty">Noch keine Ausgaben für diesen Monat.</div>';
+    return;
+  }
+
+  /* Feste, gut unterscheidbare Palette. Neue Kategorien erhalten automatisch die nächste Farbe. */
+  let colors=['#168f4d','#64a96f','#a8c96f','#d4b85a','#d98b5f','#bd6f75','#8c78b8','#5f91b5','#67aaa4','#8b9b63'];
+  let start=0,parts=[];
+  positive.forEach((x,i)=>{
+    let end=start+(x.v/total*100);
+    parts.push(`${colors[i%colors.length]} ${start.toFixed(3)}% ${end.toFixed(3)}%`);
+    start=end;
+  });
+  pie.style.background=`conic-gradient(${parts.join(',')})`;
+  center.innerHTML=`<b>${euro(total)}</b><span>Nettoausgaben</span>`;
+
+  legend.innerHTML=positive.map((x,i)=>{
+    let pct=(x.v/total*100);
+    return `<div class="analyticsPieLegendRow">
+      <i class="analyticsPieLegendDot" style="background:${colors[i%colors.length]}"></i>
+      <span class="analyticsPieLegendName">${esc(x.c.name)}</span>
+      <span class="analyticsPieLegendValue">${pct.toLocaleString('de-DE',{maximumFractionDigits:1})}% · ${euro(x.v)}</span>
+    </div>`;
+  }).join('');
 }
 function renderAnalyticsDetail(month,list){
   let box=$('#analyticsDetail');
@@ -138,7 +173,7 @@ $('#deleteEntry').onclick=()=>{let id=$('#editId').value;if(confirm('Diesen Eint
 $('#closeEdit').onclick=()=>$('#editBox').classList.add('hidden');
 $('#menuBtn').onclick=()=>$('#menu').classList.remove('hidden');$('#closeMenu').onclick=()=>$('#menu').classList.add('hidden');$('#about').onclick=()=>{$('#menu').classList.add('hidden');$('#aboutBox').classList.remove('hidden')};$('#closeAbout').onclick=()=>$('#aboutBox').classList.add('hidden');
 function download(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.1.6',exported:new Date().toISOString(),data:state},null,2),'application/json');
+$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.1.7',exported:new Date().toISOString(),data:state},null,2),'application/json');
 $('#restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.app!=='Haushaltsbuch'||!x.data||!Array.isArray(x.data.entries)||!Array.isArray(x.data.categories))throw 0;if(confirm('Datensicherung wiederherstellen? Aktuelle Daten werden ersetzt.')){state=x.data;save();alert('Datensicherung wurde wiederhergestellt.')}}catch(_){alert('Diese Datei ist keine gültige Haushaltsbuch-Datensicherung.')}e.target.value=''};
 $('#csv').onclick=()=>{let rows=[['Datum','Buchungsart','Betrag','Kategorie','Verwendungszweck'],...state.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='refund'?'Erstattung':'Ausgabe',String(e.amount).replace('.',','),catById(e.categoryId)?.name||'',e.purpose||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');download(`haushaltsbuch-${today()}.csv`,csv,'text/csv;charset=utf-8')};
 $('#printFiltered').onclick=()=>printReport();
