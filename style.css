@@ -34,3 +34,17 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:7px 7px calc(7px +
 .analyticsPrintBtn{color:var(--green);font-weight:800;white-space:nowrap;min-height:40px;padding:8px 12px}
 .detailTotal{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);margin-top:10px;padding-top:12px;font-weight:800}
 @media(max-width:390px){.analyticsDetailHeader{align-items:stretch;flex-direction:column}.analyticsPrintBtn{width:100%}}
+
+
+/* v0.1.5 – iOS/Safari: Datumsfelder exakt innerhalb des Formularrasters */
+.form label,.filters label{min-width:0}
+input,select{box-sizing:border-box;max-width:100%;min-width:0}
+input[type="date"]{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  border-radius:12px;
+  overflow:hidden;
+}
