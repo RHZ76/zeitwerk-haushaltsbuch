@@ -151,3 +151,58 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:7px 7px calc(7px +
     background-position:right 12px center;
   }
 }
+
+
+/* v0.1.9 – FINAL: tatsächlicher Container heißt #transactions, nicht #view-list */
+#transactions .filters{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  column-gap:10px !important;
+  row-gap:0 !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  overflow:hidden !important;
+}
+#transactions .filters > label{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  gap:6px !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+}
+#transactions #monthFilter,
+#transactions #categoryFilter{
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:46px !important;
+  min-height:46px !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  border-radius:12px !important;
+  padding:10px 12px !important;
+  font-size:16px !important;
+}
+@supports (-webkit-touch-callout:none){
+  #transactions #monthFilter,
+  #transactions #categoryFilter{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+  }
+  #transactions #monthFilter::-webkit-date-and-time-value{
+    min-width:0 !important;
+    width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    text-align:center !important;
+  }
+  #transactions #monthFilter::-webkit-datetime-edit{
+    min-width:0 !important;
+    padding:0 !important;
+  }
+}
