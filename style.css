@@ -35,16 +35,57 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:7px 7px calc(7px +
 .detailTotal{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);margin-top:10px;padding-top:12px;font-weight:800}
 @media(max-width:390px){.analyticsDetailHeader{align-items:stretch;flex-direction:column}.analyticsPrintBtn{width:100%}}
 
+/* v0.1.6 – gezielter iPhone/Safari-Fix für das Datumsfeld unter „Eintragen“ */
+.form,
+.form label,
+.form .bookingDateInput{
+  min-width:0;
+}
 
-/* v0.1.5 – iOS/Safari: Datumsfelder exakt innerhalb des Formularrasters */
-.form label,.filters label{min-width:0}
-input,select{box-sizing:border-box;max-width:100%;min-width:0}
-input[type="date"]{
+.form .bookingDateInput{
+  -webkit-appearance:none;
+  appearance:none;
   display:block;
   width:100%;
   max-width:100%;
-  min-width:0;
   box-sizing:border-box;
+  height:56px;
+  min-height:56px;
+  padding:0 16px;
+  margin:0;
   border-radius:12px;
   overflow:hidden;
+  font:inherit;
+  line-height:56px;
+}
+
+/* Safari/iOS hält für date-Inputs sonst eine eigene intrinsische Breite vor */
+@supports (-webkit-touch-callout:none){
+  .form .bookingDateInput{
+    width:calc(100% - 0px);
+    max-width:100%;
+    min-width:0;
+    padding-left:16px;
+    padding-right:16px;
+  }
+
+  .form .bookingDateInput::-webkit-date-and-time-value{
+    min-width:0;
+    width:100%;
+    margin:0;
+    padding:0;
+    text-align:center;
+  }
+
+  .form .bookingDateInput::-webkit-datetime-edit{
+    min-width:0;
+    width:100%;
+    padding:0;
+    margin:0;
+  }
+
+  .form .bookingDateInput::-webkit-calendar-picker-indicator{
+    margin:0;
+    padding:0;
+  }
 }
