@@ -237,3 +237,9 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:7px 7px calc(7px +
 #restore{
   color:#0a66c2 !important;
 }
+
+/* v0.2.3 – sichtbaren Wiederherstellen-Button korrigieren */
+label.filelabel{
+  color:#0a66c2 !important;
+  -webkit-text-fill-color:#0a66c2 !important;
+}
