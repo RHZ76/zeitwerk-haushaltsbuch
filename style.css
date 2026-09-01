@@ -314,3 +314,22 @@ label.filelabel{
   .printCategoryBlock h2 span{white-space:nowrap}
   .printGrandTotal{border-top:2px solid #111;margin-top:5mm;padding-top:3mm;display:flex;justify-content:space-between;font-size:12pt}
 }
+
+/* v0.2.6 – Kategorien und Letzte Einträge: identischer Klappkopf */
+.categoriesFold summary,
+.recentFold summary{
+  min-height:0;
+  padding:15px 16px;
+  display:list-item !important;
+  font-weight:750;
+  cursor:pointer;
+  list-style:disclosure-closed !important;
+}
+.categoriesFold[open] summary,
+.recentFold[open] summary{list-style:disclosure-open !important}
+.categoriesFold summary::-webkit-details-marker,
+.recentFold summary::-webkit-details-marker{display:inline !important}
+.categoriesFold summary::marker,
+.recentFold summary::marker{content:normal !important}
+.categoriesFold summary::before,
+.recentFold summary::before{content:none !important;display:none !important}
