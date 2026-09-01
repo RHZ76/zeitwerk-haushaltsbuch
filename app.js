@@ -17,6 +17,8 @@ function expenseTotal(list){return list.filter(e=>e.type==='expense').reduce((a,
 function refundTotal(list){return list.filter(e=>e.type==='refund').reduce((a,e)=>a+(+e.amount||0),0)}
 function nav(id){$$('.view').forEach(v=>v.classList.toggle('active',v.id===id));$$('nav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===id));render()}
 $$('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));
+const overviewCategoryManage=document.querySelector('.categoriesFold [data-nav="categories"]');
+if(overviewCategoryManage) overviewCategoryManage.addEventListener('click',e=>e.stopPropagation());
 
 function options(includeInactive=false,all=false){let cs=state.categories;return (all?'<option value="all">Alle Kategorien</option>':'')+cs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}
 function syncSelects(){let current=$('#category').value, edit=$('#editCategory').value, filter=$('#categoryFilter').value;$('#category').innerHTML=options();$('#editCategory').innerHTML=options(true);$('#categoryFilter').innerHTML=options(true,true);if(current&&catById(current))$('#category').value=current;if(edit&&catById(edit))$('#editCategory').value=edit;if(filter==='all'||catById(filter))$('#categoryFilter').value=filter}
@@ -206,7 +208,7 @@ $('#deleteEntry').onclick=()=>{let id=$('#editId').value;if(confirm('Diesen Eint
 $('#closeEdit').onclick=()=>$('#editBox').classList.add('hidden');
 $('#menuBtn').onclick=()=>$('#menu').classList.remove('hidden');$('#closeMenu').onclick=()=>$('#menu').classList.add('hidden');$('#about').onclick=()=>{$('#menu').classList.add('hidden');$('#aboutBox').classList.remove('hidden')};$('#closeAbout').onclick=()=>$('#aboutBox').classList.add('hidden');
 function download(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.2.3',exported:new Date().toISOString(),data:state},null,2),'application/json');
+$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.2.4',exported:new Date().toISOString(),data:state},null,2),'application/json');
 $('#restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.app!=='Haushaltsbuch'||!x.data||!Array.isArray(x.data.entries)||!Array.isArray(x.data.categories))throw 0;if(confirm('Datensicherung wiederherstellen? Aktuelle Daten werden ersetzt.')){state=x.data;save();alert('Datensicherung wurde wiederhergestellt.')}}catch(_){alert('Diese Datei ist keine gültige Haushaltsbuch-Datensicherung.')}e.target.value=''};
 $('#csv').onclick=()=>{let rows=[['Datum','Buchungsart','Betrag','Kategorie','Verwendungszweck'],...state.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='refund'?'Erstattung':'Ausgabe',String(e.amount).replace('.',','),catById(e.categoryId)?.name||'',e.purpose||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');download(`haushaltsbuch-${today()}.csv`,csv,'text/csv;charset=utf-8')};
 $('#printFiltered').onclick=()=>printReport();

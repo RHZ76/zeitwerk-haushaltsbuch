@@ -243,3 +243,39 @@ label.filelabel{
   color:#0a66c2 !important;
   -webkit-text-fill-color:#0a66c2 !important;
 }
+
+/* v0.2.4 – Kategorien auf der Übersicht einklappbar, ohne Änderung der bestehenden Spaltmaße */
+.categoriesFold{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  padding:0;
+}
+.categoriesFold summary{
+  min-height:52px;
+  padding:15px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  cursor:pointer;
+  list-style:none;
+}
+.categoriesFold summary::-webkit-details-marker{display:none}
+.categoriesFold summary::marker{content:""}
+.categoriesFold summary::before{
+  content:"›";
+  display:inline-block;
+  flex:0 0 auto;
+  font-size:22px;
+  line-height:1;
+  transform:rotate(90deg);
+  transition:transform .15s ease;
+  color:var(--muted);
+}
+.categoriesFold:not([open]) summary::before{transform:rotate(0deg)}
+.categoriesFold summary b{margin-right:auto}
+.categoriesFold #categorySummary{padding:0 16px 8px}
+.categoriesFold .linkBtn{min-height:36px;padding:7px 10px;position:relative;z-index:1}
