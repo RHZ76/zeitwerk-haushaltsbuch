@@ -333,3 +333,16 @@ label.filelabel{
 .recentFold summary::marker{content:normal !important}
 .categoriesFold summary::before,
 .recentFold summary::before{content:none !important;display:none !important}
+
+/* v0.2.7 – nur Ausgaben > Drucken: optimierte 5-Spalten-Tabelle */
+@media print{
+  #printSheet.transactionsPrint table{width:100%;table-layout:fixed;border-collapse:collapse}
+  #printSheet.transactionsPrint th,#printSheet.transactionsPrint td{
+    box-sizing:border-box;word-break:normal;overflow-wrap:normal;hyphens:auto;vertical-align:top
+  }
+  #printSheet.transactionsPrint th:nth-child(1),#printSheet.transactionsPrint td:nth-child(1){width:15%;white-space:nowrap}
+  #printSheet.transactionsPrint th:nth-child(2),#printSheet.transactionsPrint td:nth-child(2){width:19%}
+  #printSheet.transactionsPrint th:nth-child(3),#printSheet.transactionsPrint td:nth-child(3){width:36%}
+  #printSheet.transactionsPrint th:nth-child(4),#printSheet.transactionsPrint td:nth-child(4){width:14%;white-space:nowrap}
+  #printSheet.transactionsPrint th:nth-child(5),#printSheet.transactionsPrint td:nth-child(5){width:16%;white-space:nowrap;text-align:right}
+}
