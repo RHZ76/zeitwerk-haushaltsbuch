@@ -207,7 +207,7 @@ $('#deleteEntry').onclick=()=>{let id=$('#editId').value;if(confirm('Diesen Eint
 $('#closeEdit').onclick=()=>$('#editBox').classList.add('hidden');
 $('#menuBtn').onclick=()=>$('#menu').classList.remove('hidden');$('#closeMenu').onclick=()=>$('#menu').classList.add('hidden');$('#about').onclick=()=>{$('#menu').classList.add('hidden');$('#aboutBox').classList.remove('hidden')};$('#closeAbout').onclick=()=>$('#aboutBox').classList.add('hidden');
 function download(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.2.7',exported:new Date().toISOString(),data:state},null,2),'application/json');
+$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.2.8',exported:new Date().toISOString(),data:state},null,2),'application/json');
 $('#restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.app!=='Haushaltsbuch'||!x.data||!Array.isArray(x.data.entries)||!Array.isArray(x.data.categories))throw 0;if(confirm('Datensicherung wiederherstellen? Aktuelle Daten werden ersetzt.')){state=x.data;save();alert('Datensicherung wurde wiederhergestellt.')}}catch(_){alert('Diese Datei ist keine gültige Haushaltsbuch-Datensicherung.')}e.target.value=''};
 $('#csv').onclick=()=>{let rows=[['Datum','Buchungsart','Betrag','Kategorie','Verwendungszweck'],...state.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='refund'?'Erstattung':'Ausgabe',String(e.amount).replace('.',','),catById(e.categoryId)?.name||'',e.purpose||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');download(`haushaltsbuch-${today()}.csv`,csv,'text/csv;charset=utf-8')};
 $('#printFiltered').onclick=()=>printReport();
@@ -223,14 +223,13 @@ function printAnalyticsMonth(month){
   })).filter(g=>g.rows.length).sort((a,b)=>a.c.name.localeCompare(b.c.name,'de'));
 
   let old=$('#printSheet');if(old)old.remove();
-  let s=document.createElement('section');s.id='printSheet';
-  let groupHtml=groups.length?groups.map(g=>`
-    <div class="printCategoryBlock">
-      <h2>${esc(g.c.name)} <span>${euro(Math.abs(net(g.rows)))}</span></h2>
-      <table><thead><tr><th>Datum</th><th>Verwendungszweck</th><th>Art</th><th>Betrag</th></tr></thead>
-      <tbody>${g.rows.map(e=>`<tr><td>${dateDE(e.date)}</td><td>${esc(e.purpose)}</td><td>${e.type==='refund'?'Erstattung':'Ausgabe'}</td><td>${e.type==='refund'?'+':'−'}${euro(e.amount)}</td></tr>`).join('')}
-      <tr class="printSum"><td colspan="3">Gesamt ${esc(g.c.name)}</td><td>${euro(Math.abs(net(g.rows)))}</td></tr></tbody></table>
-    </div>`).join(''):'<p>Für diesen Monat gibt es keine Buchungen.</p>';
+  let s=document.createElement('section');s.id='printSheet';s.className='analyticsMonthPrint';
+
+  let categoryHtml=groups.length?`
+    <div class="printCategorySummary">
+      <div class="printCategorySummaryHead"><span>Kategorie</span><span>Betrag</span></div>
+      ${groups.map(g=>`<div class="printCategorySummaryRow"><span>${esc(g.c.name)}</span><b>${euro(Math.abs(net(g.rows)))}</b></div>`).join('')}
+    </div>`:'<p>Für diesen Monat gibt es keine Buchungen.</p>';
 
   s.innerHTML=`<h1>Haushaltsbuch – Monatsauswertung</h1>
     <p>${esc(monthName)}</p>
@@ -239,7 +238,7 @@ function printAnalyticsMonth(month){
       <div><span>Erstattungen</span><b>${euro(refundTotal(list))}</b></div>
       <div><span>Gesamt</span><b>${euro(Math.abs(net(list)))}</b></div>
     </div>
-    ${groupHtml}
+    ${categoryHtml}
     <div class="printGrandTotal"><span>Gesamt ${esc(monthName)}</span><b>${euro(Math.abs(net(list)))}</b></div>
     <div class="printFooter">powered by viacruz · viacruz.com</div>`;
   document.body.appendChild(s);

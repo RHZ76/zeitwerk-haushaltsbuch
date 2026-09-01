@@ -346,3 +346,34 @@ label.filelabel{
   #printSheet.transactionsPrint th:nth-child(4),#printSheet.transactionsPrint td:nth-child(4){width:14%;white-space:nowrap}
   #printSheet.transactionsPrint th:nth-child(5),#printSheet.transactionsPrint td:nth-child(5){width:16%;white-space:nowrap;text-align:right}
 }
+
+/* v0.2.8 – kompakter Monatsdruck: nur Kategorien und Summen */
+@media print{
+  #printSheet.analyticsMonthPrint .printCategorySummary{
+    width:100%;
+    margin:0 0 7mm;
+    border-top:1px solid #d7d7d7;
+  }
+  #printSheet.analyticsMonthPrint .printCategorySummaryHead,
+  #printSheet.analyticsMonthPrint .printCategorySummaryRow{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8mm;
+    align-items:center;
+    padding:2.5mm 1mm;
+    border-bottom:1px solid #e2e2e2;
+  }
+  #printSheet.analyticsMonthPrint .printCategorySummaryHead{
+    font-size:9pt;
+    font-weight:700;
+  }
+  #printSheet.analyticsMonthPrint .printCategorySummaryHead span:last-child,
+  #printSheet.analyticsMonthPrint .printCategorySummaryRow b{
+    text-align:right;
+    white-space:nowrap;
+  }
+  #printSheet.analyticsMonthPrint .printCategorySummaryRow{
+    break-inside:avoid;
+    page-break-inside:avoid;
+  }
+}
