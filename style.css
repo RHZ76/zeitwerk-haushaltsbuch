@@ -279,3 +279,38 @@ label.filelabel{
 .categoriesFold summary b{margin-right:auto}
 .categoriesFold #categorySummary{padding:0 16px 8px}
 .categoriesFold .linkBtn{min-height:36px;padding:7px 10px;position:relative;z-index:1}
+
+/* v0.2.5 – Kategorien verwendet denselben nativen Einklapppfeil wie „Letzte Einträge“ */
+.categoriesFold summary{
+  display:list-item !important;
+  min-height:0;
+  padding:15px 16px;
+  font-weight:750;
+  cursor:pointer;
+  list-style:disclosure-closed !important;
+}
+.categoriesFold[open] summary{list-style:disclosure-open !important}
+.categoriesFold summary::-webkit-details-marker{display:inline !important}
+.categoriesFold summary::marker{content:normal !important}
+.categoriesFold summary::before{content:none !important;display:none !important}
+.categoriesFold summary .linkBtn{float:right;margin-top:-7px}
+
+@media print{
+  #printSheet{max-width:100%;overflow:visible}
+  #printSheet table{table-layout:fixed;page-break-inside:auto}
+  #printSheet thead{display:table-header-group}
+  #printSheet tr{page-break-inside:avoid;break-inside:avoid}
+  #printSheet th,#printSheet td{overflow-wrap:anywhere;word-break:normal;vertical-align:top}
+  #printSheet th:nth-child(1),#printSheet td:nth-child(1){width:20%}
+  #printSheet th:nth-child(2),#printSheet td:nth-child(2){width:42%}
+  #printSheet th:nth-child(3),#printSheet td:nth-child(3){width:18%}
+  #printSheet th:nth-child(4),#printSheet td:nth-child(4){width:20%}
+  .printMonthSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4mm;margin:5mm 0 7mm}
+  .printMonthSummary div{border:1px solid #ccc;border-radius:3mm;padding:3mm;text-align:center}
+  .printMonthSummary span{display:block;font-size:8pt;margin-bottom:1mm}
+  .printMonthSummary b{font-size:11pt;white-space:nowrap}
+  .printCategoryBlock{break-inside:auto;margin:0 0 7mm}
+  .printCategoryBlock h2{font-size:12pt;margin:0 0 2mm;display:flex;justify-content:space-between;gap:5mm}
+  .printCategoryBlock h2 span{white-space:nowrap}
+  .printGrandTotal{border-top:2px solid #111;margin-top:5mm;padding-top:3mm;display:flex;justify-content:space-between;font-size:12pt}
+}
