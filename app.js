@@ -5,6 +5,7 @@ let state={entries:[],categories:DEFAULT_CATS.map((name,i)=>({id:'c'+(i+1),name,
 let openAnalyticsCategoryId=null;
 let entryTemplateSource=null;
 let searchReturnView='transactions';
+let overviewDetailMode=null;
 try{let x=JSON.parse(localStorage.getItem(STORE)||'null');if(x&&Array.isArray(x.entries)&&Array.isArray(x.categories))state=x}catch(e){}
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const euro=n=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(n)||0);
@@ -63,7 +64,90 @@ function populateMonthFilter(){
 }
 
 function filtered(monthEl='#monthFilter',catEl='#categoryFilter'){let m=$(monthEl)?.value||ymNow(),c=$(catEl)?.value||'all';return state.entries.filter(e=>(!m||e.date.startsWith(m))&&(c==='all'||e.categoryId===c))}
-function renderOverview(){let m=ymNow(), list=state.entries.filter(e=>e.date.startsWith(m));$('#monthNet').textContent=euro(Math.abs(net(list)));$('#monthMeta').textContent=`${list.filter(e=>e.type==='expense').length} Ausgaben · ${list.filter(e=>e.type==='refund').length} Erstattungen`;$('#monthExpenses').textContent=euro(expenseTotal(list));$('#monthRefunds').textContent=euro(refundTotal(list));let sums=state.categories.map(c=>({c,v:Math.abs(net(list.filter(e=>e.categoryId===c.id)))})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,6);$('#categorySummary').innerHTML=sums.length?sums.map(x=>`<div class="catSummaryRow"><div class="catLeft"><i class="catDot"></i><span class="catName">${esc(x.c.name)}</span></div><span class="catAmount">${euro(x.v)}</span></div>`).join(''):'<div class="hint">Noch keine Buchungen in diesem Monat.</div>';let recent=[...state.entries].sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created).slice(0,4);$('#recent').innerHTML=recent.length?recent.map(rowHTML).join(''):'<div class="hint">Noch keine Einträge gespeichert.</div>';bindRows($('#recent'))}
+function renderOverview(){
+  let m=ymNow(),
+      list=state.entries.filter(e=>e.date.startsWith(m)),
+      expenses=list.filter(e=>e.type==='expense'),
+      refunds=list.filter(e=>e.type==='refund');
+
+  $('#monthNet').textContent=euro(Math.abs(net(list)));
+  $('#monthMeta').textContent=`${expenses.length} Ausgaben · ${refunds.length} Erstattungen`;
+  $('#monthExpenses').textContent=euro(expenseTotal(list));
+  $('#monthRefunds').textContent=euro(refundTotal(list));
+
+  let sums=state.categories
+    .map(c=>({c,v:Math.abs(net(list.filter(e=>e.categoryId===c.id)))}))
+    .filter(x=>x.v>0)
+    .sort((a,b)=>b.v-a.v)
+    .slice(0,6);
+
+  $('#categorySummary').innerHTML=sums.length
+    ?sums.map(x=>`<div class="catSummaryRow"><div class="catLeft"><i class="catDot"></i><span class="catName">${esc(x.c.name)}</span></div><span class="catAmount">${euro(x.v)}</span></div>`).join('')
+    :'<div class="hint">Noch keine Buchungen in diesem Monat.</div>';
+
+  let recent=[...state.entries]
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created)
+    .slice(0,4);
+  $('#recent').innerHTML=recent.length
+    ?recent.map(rowHTML).join('')
+    :'<div class="hint">Noch keine Einträge gespeichert.</div>';
+  bindRows($('#recent'));
+
+  renderOverviewMonthDetails();
+}
+
+function renderOverviewMonthDetails(){
+  let box=$('#overviewMonthDetails');
+  if(!box)return;
+
+  let cards={
+    all:$('#overviewTotalCard'),
+    expense:$('#overviewExpensesCard'),
+    refund:$('#overviewRefundsCard')
+  };
+
+  Object.entries(cards).forEach(([mode,el])=>{
+    if(!el)return;
+    let active=overviewDetailMode===mode;
+    el.classList.toggle('selected',active);
+    el.setAttribute('aria-expanded',active?'true':'false');
+  });
+
+  if(!overviewDetailMode){
+    box.classList.add('hidden');
+    return;
+  }
+
+  let m=ymNow();
+  let list=state.entries
+    .filter(e=>e.date.startsWith(m))
+    .filter(e=>overviewDetailMode==='all'||e.type===overviewDetailMode)
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created);
+
+  let [year,month]=m.split('-').map(Number);
+  let monthName=new Date(year,month-1,1).toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+  let config={
+    all:{title:'Alle Buchungen', eyebrow:'DIESER MONAT', amount:Math.abs(net(list))},
+    expense:{title:'Ausgaben', eyebrow:'DIESER MONAT', amount:expenseTotal(list)},
+    refund:{title:'Erstattungen', eyebrow:'DIESER MONAT', amount:refundTotal(list)}
+  }[overviewDetailMode];
+
+  $('#overviewDetailEyebrow').textContent=config.eyebrow;
+  $('#overviewDetailTitle').textContent=config.title;
+  $('#overviewDetailMeta').innerHTML=`<span>${esc(monthName)} · ${list.length} ${list.length===1?'Buchung':'Buchungen'}</span><strong>${euro(config.amount)}</strong>`;
+  $('#overviewDetailEntries').innerHTML=list.length
+    ?list.map(rowHTML).join('')
+    :'<div class="hint">In diesem Monat gibt es hier noch keine Buchungen.</div>';
+
+  bindRows($('#overviewDetailEntries'));
+  box.classList.remove('hidden');
+}
+
+function toggleOverviewMonthDetails(mode){
+  overviewDetailMode=overviewDetailMode===mode?null:mode;
+  renderOverviewMonthDetails();
+}
+
 function renderTransactions(){populateMonthFilter();let list=filtered().sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created);$('#listTotals').innerHTML=`<div class="expenseSummaryGrid">
   <div class="expenseSummaryItem"><span>Ausgaben</span><strong>${euro(expenseTotal(list))}</strong></div>
   <div class="expenseSummaryItem"><span>Erstattungen</span><strong>${euro(refundTotal(list))}</strong></div>
@@ -264,6 +348,25 @@ function renderAnalyticsDetail(month,list){
 }
 function render(){syncSelects();renderOverview();renderTransactions();renderSearch();renderCategories();renderAnalytics()}
 $('#date').value=today();populateMonthFilter();$('#monthFilter').value=ymNow();$('#analyticsMonth').value=ymNow();
+function bindOverviewSummaryCard(id,mode){
+  let el=$(id);
+  if(!el)return;
+  el.onclick=()=>toggleOverviewMonthDetails(mode);
+  el.onkeydown=e=>{
+    if(e.key==='Enter'||e.key===' '){
+      e.preventDefault();
+      toggleOverviewMonthDetails(mode);
+    }
+  };
+}
+bindOverviewSummaryCard('#overviewTotalCard','all');
+bindOverviewSummaryCard('#overviewExpensesCard','expense');
+bindOverviewSummaryCard('#overviewRefundsCard','refund');
+$('#closeOverviewDetails').onclick=()=>{
+  overviewDetailMode=null;
+  renderOverviewMonthDetails();
+};
+
 let submitType='expense';$$('#entryForm button[type=submit]').forEach(b=>b.onclick=()=>submitType=b.dataset.type);
 $('#entryForm').onsubmit=e=>{e.preventDefault();let amount=Number($('#amount').value);if(!(amount>0))return;state.entries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),date:$('#date').value,amount,categoryId:$('#category').value,purpose:$('#purpose').value.trim(),type:submitType,created:Date.now()});save();$('#amount').value='';$('#purpose').value='';clearEntryTemplate();nav('overview')};
 $('#monthFilter').onchange=renderTransactions;$('#categoryFilter').onchange=renderTransactions;$('#analyticsMonth').onchange=()=>{openAnalyticsCategoryId=null;renderAnalytics()};$('#clearFilters').onclick=()=>{$('#monthFilter').value=ymNow();$('#categoryFilter').value='all';renderTransactions()};
@@ -306,7 +409,7 @@ $('#deleteEntry').onclick=()=>{let id=$('#editId').value;if(confirm('Diesen Eint
 $('#closeEdit').onclick=()=>$('#editBox').classList.add('hidden');
 $('#menuBtn').onclick=()=>$('#menu').classList.remove('hidden');$('#closeMenu').onclick=()=>$('#menu').classList.add('hidden');$('#about').onclick=()=>{$('#menu').classList.add('hidden');$('#aboutBox').classList.remove('hidden')};$('#closeAbout').onclick=()=>$('#aboutBox').classList.add('hidden');
 function download(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.3.0',exported:new Date().toISOString(),data:state},null,2),'application/json');
+$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.3.1',exported:new Date().toISOString(),data:state},null,2),'application/json');
 $('#restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.app!=='Haushaltsbuch'||!x.data||!Array.isArray(x.data.entries)||!Array.isArray(x.data.categories))throw 0;if(confirm('Datensicherung wiederherstellen? Aktuelle Daten werden ersetzt.')){state=x.data;save();alert('Datensicherung wurde wiederhergestellt.')}}catch(_){alert('Diese Datei ist keine gültige Haushaltsbuch-Datensicherung.')}e.target.value=''};
 $('#csv').onclick=()=>{let rows=[['Datum','Buchungsart','Betrag','Kategorie','Verwendungszweck'],...state.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='refund'?'Erstattung':'Ausgabe',String(e.amount).replace('.',','),catById(e.categoryId)?.name||'',e.purpose||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');download(`haushaltsbuch-${today()}.csv`,csv,'text/csv;charset=utf-8')};
 $('#printFiltered').onclick=()=>printReport();
