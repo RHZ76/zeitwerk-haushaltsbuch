@@ -3,6 +3,7 @@ const LOCK='viacruz_haushaltsbuch_v1_lock';
 const DEFAULT_CATS=['Lebensmittel','Tanken','Freizeit','Kleidung','Haus & Wohnung','Gesundheit','Urlaub','Sonstiges'];
 let state={entries:[],categories:DEFAULT_CATS.map((name,i)=>({id:'c'+(i+1),name,active:true,created:Date.now()+i}))};
 let openAnalyticsCategoryId=null;
+let entryTemplateSource=null;
 try{let x=JSON.parse(localStorage.getItem(STORE)||'null');if(x&&Array.isArray(x.entries)&&Array.isArray(x.categories))state=x}catch(e){}
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const euro=n=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(n)||0);
@@ -16,7 +17,15 @@ function net(list){return list.reduce((a,e)=>a+(e.type==='refund'?+e.amount:-e.a
 function expenseTotal(list){return list.filter(e=>e.type==='expense').reduce((a,e)=>a+(+e.amount||0),0)}
 function refundTotal(list){return list.filter(e=>e.type==='refund').reduce((a,e)=>a+(+e.amount||0),0)}
 function nav(id){$$('.view').forEach(v=>v.classList.toggle('active',v.id===id));$$('nav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===id));render()}
-$$('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));
+function clearEntryTemplate(){
+  entryTemplateSource=null;
+  let n=$('#templateNotice');
+  if(n){n.classList.add('hidden');n.innerHTML=''}
+}
+$$('[data-nav]').forEach(b=>b.onclick=()=>{
+  if(b.dataset.nav==='entry')clearEntryTemplate();
+  nav(b.dataset.nav);
+});
 
 
 function options(includeInactive=false,all=false){let cs=state.categories;return (all?'<option value="all">Alle Kategorien</option>':'')+cs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}
@@ -59,6 +68,80 @@ function renderTransactions(){populateMonthFilter();let list=filtered().sort((a,
   <div class="expenseSummaryItem"><span>Erstattungen</span><strong>${euro(refundTotal(list))}</strong></div>
   <div class="expenseSummaryItem total"><span>Gesamt</span><strong>${euro(Math.abs(net(list)))}</strong></div>
 </div>`;$('#entries').innerHTML=list.length?list.map(rowHTML).join(''):'<div class="hint">Für diesen Filter gibt es keine Einträge.</div>';bindRows($('#entries'))}
+
+function renderSearch(){
+  let input=$('#searchInput'), results=$('#searchResults'), meta=$('#searchMeta');
+  if(!input||!results||!meta)return;
+  let q=input.value.trim().toLocaleLowerCase('de-DE');
+
+  if(!q){
+    meta.textContent='Gib einen Suchbegriff ein.';
+    results.innerHTML='';
+    return;
+  }
+
+  let list=[...state.entries]
+    .filter(e=>{
+      let c=catById(e.categoryId)?.name||'';
+      let type=e.type==='refund'?'Erstattung':'Ausgabe';
+      let hay=[e.purpose||'',c,type,e.date,dateDE(e.date)]
+        .join(' ')
+        .toLocaleLowerCase('de-DE');
+      return hay.includes(q);
+    })
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created);
+
+  meta.textContent=list.length===1?'1 Treffer':`${list.length} Treffer`;
+
+  results.innerHTML=list.length?list.map(e=>{
+    let c=catById(e.categoryId);
+    let sign=e.type==='refund'?'+':'−';
+    return `<div class="searchResult card" data-search-id="${e.id}">
+      <div class="searchResultTop">
+        <div class="searchResultText">
+          <b>${esc(e.purpose||c?.name||'Buchung')}</b>
+          <div class="meta">${dateDE(e.date)} · ${esc(c?.name||'Unbekannte Kategorie')}</div>
+        </div>
+        <div class="money ${e.type}">${sign}${euro(e.amount)}</div>
+      </div>
+      <span class="badge ${e.type}">${e.type==='refund'?'Erstattung':'Ausgabe'}</span>
+      <div class="searchActions">
+        <button type="button" data-search-action="edit" data-id="${e.id}">Bearbeiten</button>
+        <button type="button" class="secondary" data-search-action="template" data-id="${e.id}">Als Vorlage übernehmen</button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="hint">Keine passenden Buchungen gefunden.</div>';
+
+  results.querySelectorAll('[data-search-action="edit"]').forEach(b=>{
+    b.onclick=()=>openEdit(b.dataset.id);
+  });
+  results.querySelectorAll('[data-search-action="template"]').forEach(b=>{
+    b.onclick=()=>useEntryAsTemplate(b.dataset.id);
+  });
+}
+
+function useEntryAsTemplate(id){
+  let e=state.entries.find(x=>x.id===id);
+  if(!e)return;
+
+  entryTemplateSource=e.id;
+  $('#date').value=today();
+  $('#amount').value='';
+  $('#category').value=e.categoryId;
+  $('#purpose').value=e.purpose||'';
+  submitType=e.type;
+
+  let c=catById(e.categoryId);
+  let n=$('#templateNotice');
+  if(n){
+    n.innerHTML=`<b>Vorlage übernommen</b><span>${esc(c?.name||'Unbekannte Kategorie')} · ${e.type==='refund'?'Erstattung':'Ausgabe'}</span><small>Datum ist heute, der Betrag bleibt bewusst leer.</small>`;
+    n.classList.remove('hidden');
+  }
+
+  nav('entry');
+  setTimeout(()=>$('#amount')?.focus(),60);
+}
+
 function renderCategories(){
   let list=state.categories;
   $('#categoryList').innerHTML=list.map(c=>`<div class="card catManageRow" data-cat="${c.id}">
@@ -178,11 +261,14 @@ function renderAnalyticsDetail(month,list){
   bindRows(box);
   $('#printAnalyticsCategory').onclick=()=>printAnalyticsCategory(month,c.id);
 }
-function render(){syncSelects();renderOverview();renderTransactions();renderCategories();renderAnalytics()}
+function render(){syncSelects();renderOverview();renderTransactions();renderSearch();renderCategories();renderAnalytics()}
 $('#date').value=today();populateMonthFilter();$('#monthFilter').value=ymNow();$('#analyticsMonth').value=ymNow();
 let submitType='expense';$$('#entryForm button[type=submit]').forEach(b=>b.onclick=()=>submitType=b.dataset.type);
-$('#entryForm').onsubmit=e=>{e.preventDefault();let amount=Number($('#amount').value);if(!(amount>0))return;state.entries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),date:$('#date').value,amount,categoryId:$('#category').value,purpose:$('#purpose').value.trim(),type:submitType,created:Date.now()});save();$('#amount').value='';$('#purpose').value='';nav('overview')};
+$('#entryForm').onsubmit=e=>{e.preventDefault();let amount=Number($('#amount').value);if(!(amount>0))return;state.entries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),date:$('#date').value,amount,categoryId:$('#category').value,purpose:$('#purpose').value.trim(),type:submitType,created:Date.now()});save();$('#amount').value='';$('#purpose').value='';clearEntryTemplate();nav('overview')};
 $('#monthFilter').onchange=renderTransactions;$('#categoryFilter').onchange=renderTransactions;$('#analyticsMonth').onchange=()=>{openAnalyticsCategoryId=null;renderAnalytics()};$('#clearFilters').onclick=()=>{$('#monthFilter').value=ymNow();$('#categoryFilter').value='all';renderTransactions()};
+$('#openSearch').onclick=()=>{nav('search');setTimeout(()=>$('#searchInput')?.focus(),60)};
+$('#closeSearch').onclick=()=>nav('transactions');
+$('#searchInput').oninput=renderSearch;
 function createCategoryAndSelect(targetSelectId){
   let n=prompt('Name der neuen Kategorie:','');
   if(!n||!n.trim())return;
@@ -207,7 +293,7 @@ $('#deleteEntry').onclick=()=>{let id=$('#editId').value;if(confirm('Diesen Eint
 $('#closeEdit').onclick=()=>$('#editBox').classList.add('hidden');
 $('#menuBtn').onclick=()=>$('#menu').classList.remove('hidden');$('#closeMenu').onclick=()=>$('#menu').classList.add('hidden');$('#about').onclick=()=>{$('#menu').classList.add('hidden');$('#aboutBox').classList.remove('hidden')};$('#closeAbout').onclick=()=>$('#aboutBox').classList.add('hidden');
 function download(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.2.8',exported:new Date().toISOString(),data:state},null,2),'application/json');
+$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.2.9',exported:new Date().toISOString(),data:state},null,2),'application/json');
 $('#restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.app!=='Haushaltsbuch'||!x.data||!Array.isArray(x.data.entries)||!Array.isArray(x.data.categories))throw 0;if(confirm('Datensicherung wiederherstellen? Aktuelle Daten werden ersetzt.')){state=x.data;save();alert('Datensicherung wurde wiederhergestellt.')}}catch(_){alert('Diese Datei ist keine gültige Haushaltsbuch-Datensicherung.')}e.target.value=''};
 $('#csv').onclick=()=>{let rows=[['Datum','Buchungsart','Betrag','Kategorie','Verwendungszweck'],...state.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='refund'?'Erstattung':'Ausgabe',String(e.amount).replace('.',','),catById(e.categoryId)?.name||'',e.purpose||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');download(`haushaltsbuch-${today()}.csv`,csv,'text/csv;charset=utf-8')};
 $('#printFiltered').onclick=()=>printReport();

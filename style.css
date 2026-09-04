@@ -377,3 +377,68 @@ label.filelabel{
     page-break-inside:avoid;
   }
 }
+
+
+/* v0.2.9 – Globale Suche und Buchung als Vorlage */
+.searchCard{margin-bottom:10px}
+.searchCard label{display:grid;gap:6px;font-size:13px;font-weight:650}
+.searchMeta{color:var(--muted);font-size:12px;min-height:24px;padding:1px 3px 5px}
+.searchToolbar{gap:10px}
+.searchToolbar h2{margin-right:auto}
+.searchToolbar .linkBtn{white-space:nowrap}
+
+.searchResult{margin:9px 0}
+.searchResultTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+.searchResultText{min-width:0}
+.searchResultText b{
+  display:block;
+  overflow-wrap:anywhere;
+}
+.searchResult .money{flex:0 0 auto}
+.searchActions{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+.searchActions button{
+  min-width:0;
+  min-height:44px;
+  padding:9px 8px;
+  font-size:12px;
+  line-height:1.2;
+  white-space:normal;
+}
+
+.templateNotice{
+  background:#eef7f1;
+  border:1px solid #b9dcc6;
+  border-radius:14px;
+  padding:11px 13px;
+  margin:0 0 12px;
+  display:grid;
+  gap:3px;
+}
+.templateNotice b{color:var(--green);font-size:13px}
+.templateNotice span{font-size:12px;font-weight:700}
+.templateNotice small{font-size:11px;color:var(--muted);line-height:1.35}
+
+@media(max-width:390px){
+  .searchToolbar{align-items:flex-start}
+  .searchToolbar .linkBtn{
+    min-height:40px;
+    padding:8px 9px;
+    font-size:11px;
+  }
+  .searchActions{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  }
+}
+@media(max-width:340px){
+  .searchActions{grid-template-columns:1fr}
+}

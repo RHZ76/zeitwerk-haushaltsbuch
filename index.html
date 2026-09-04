@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#f7f7f4">
 <title>Haushaltsbuch</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=0.2.8">
+<link rel="stylesheet" href="style.css?v=0.2.9">
 </head>
 <body>
 <div id="splash"><div class="powered">powered by</div><div class="viacruz">viacruz</div></div>
@@ -41,6 +41,7 @@
 
 <section id="entry" class="view">
   <h2>Buchung eintragen</h2>
+  <div id="templateNotice" class="templateNotice hidden"></div>
   <form id="entryForm" class="card form">
     <label>Datum<input id="date" type="date" required class="bookingDateInput"></label>
     <label>Betrag (€)<input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0,00"></label>
@@ -60,13 +61,27 @@
 </section>
 
 <section id="transactions" class="view">
-  <div class="toolbar"><h2>Ausgabenliste</h2><div class="toolbarActions"><button id="printFiltered" class="linkBtn">Drucken</button><button id="clearFilters" class="linkBtn">Filter löschen</button></div></div>
+  <div class="toolbar"><h2>Ausgabenliste</h2><div class="toolbarActions"><button id="openSearch" class="linkBtn">⌕ Suchen</button><button id="printFiltered" class="linkBtn">Drucken</button><button id="clearFilters" class="linkBtn">Filter löschen</button></div></div>
   <div class="card filters">
     <label>Monat<select id="monthFilter" aria-label="Monat"></select></label>
     <label>Kategorie<select id="categoryFilter"></select></label>
   </div>
   <div id="listTotals" class="netLine"></div>
   <div id="entries"></div>
+</section>
+
+<section id="search" class="view">
+  <div class="toolbar searchToolbar">
+    <h2>Suche</h2>
+    <button id="closeSearch" class="linkBtn">Zurück zu Ausgaben</button>
+  </div>
+  <div class="card searchCard">
+    <label>Gesamtes Haushaltsbuch durchsuchen
+      <input id="searchInput" type="search" autocomplete="off" placeholder="Verwendungszweck oder Kategorie">
+    </label>
+  </div>
+  <div id="searchMeta" class="searchMeta">Gib einen Suchbegriff ein.</div>
+  <div id="searchResults"></div>
 </section>
 
 <section id="categories" class="view">
@@ -149,10 +164,10 @@
 </div></div>
 
 <div id="aboutBox" class="sheet hidden"><div class="sheetbox about">
-  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.2.8 MONATSDRUCK-KOMPAKT</p><hr>
+  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.2.9 SUCHE-VORLAGE</p><hr>
   <small>powered by</small><b>viacruz</b><p>viacruz.com</p><button id="closeAbout">Schließen</button>
 </div></div>
 </div>
 
-<script src="app.js?v=0.2.8"></script>
+<script src="app.js?v=0.2.9"></script>
 </body></html>
