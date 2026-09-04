@@ -4,6 +4,7 @@ const DEFAULT_CATS=['Lebensmittel','Tanken','Freizeit','Kleidung','Haus & Wohnun
 let state={entries:[],categories:DEFAULT_CATS.map((name,i)=>({id:'c'+(i+1),name,active:true,created:Date.now()+i}))};
 let openAnalyticsCategoryId=null;
 let entryTemplateSource=null;
+let searchReturnView='transactions';
 try{let x=JSON.parse(localStorage.getItem(STORE)||'null');if(x&&Array.isArray(x.entries)&&Array.isArray(x.categories))state=x}catch(e){}
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const euro=n=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(n)||0);
@@ -266,8 +267,20 @@ $('#date').value=today();populateMonthFilter();$('#monthFilter').value=ymNow();$
 let submitType='expense';$$('#entryForm button[type=submit]').forEach(b=>b.onclick=()=>submitType=b.dataset.type);
 $('#entryForm').onsubmit=e=>{e.preventDefault();let amount=Number($('#amount').value);if(!(amount>0))return;state.entries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),date:$('#date').value,amount,categoryId:$('#category').value,purpose:$('#purpose').value.trim(),type:submitType,created:Date.now()});save();$('#amount').value='';$('#purpose').value='';clearEntryTemplate();nav('overview')};
 $('#monthFilter').onchange=renderTransactions;$('#categoryFilter').onchange=renderTransactions;$('#analyticsMonth').onchange=()=>{openAnalyticsCategoryId=null;renderAnalytics()};$('#clearFilters').onclick=()=>{$('#monthFilter').value=ymNow();$('#categoryFilter').value='all';renderTransactions()};
-$('#openSearch').onclick=()=>{nav('search');setTimeout(()=>$('#searchInput')?.focus(),60)};
-$('#closeSearch').onclick=()=>nav('transactions');
+function openGlobalSearch(fromView){
+  searchReturnView=fromView||'transactions';
+  let back=$('#closeSearch');
+  if(back){
+    back.textContent=searchReturnView==='entry'?'Zurück zur Buchung':
+      searchReturnView==='overview'?'Zurück zur Übersicht':'Zurück zu Ausgaben';
+  }
+  nav('search');
+  setTimeout(()=>$('#searchInput')?.focus(),60);
+}
+$('#openSearch').onclick=()=>openGlobalSearch('transactions');
+$('#openSearchFromOverview').onclick=()=>openGlobalSearch('overview');
+$('#openSearchFromEntry').onclick=()=>openGlobalSearch('entry');
+$('#closeSearch').onclick=()=>nav(searchReturnView||'transactions');
 $('#searchInput').oninput=renderSearch;
 function createCategoryAndSelect(targetSelectId){
   let n=prompt('Name der neuen Kategorie:','');
@@ -293,7 +306,7 @@ $('#deleteEntry').onclick=()=>{let id=$('#editId').value;if(confirm('Diesen Eint
 $('#closeEdit').onclick=()=>$('#editBox').classList.add('hidden');
 $('#menuBtn').onclick=()=>$('#menu').classList.remove('hidden');$('#closeMenu').onclick=()=>$('#menu').classList.add('hidden');$('#about').onclick=()=>{$('#menu').classList.add('hidden');$('#aboutBox').classList.remove('hidden')};$('#closeAbout').onclick=()=>$('#aboutBox').classList.add('hidden');
 function download(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.2.9',exported:new Date().toISOString(),data:state},null,2),'application/json');
+$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.3.0',exported:new Date().toISOString(),data:state},null,2),'application/json');
 $('#restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.app!=='Haushaltsbuch'||!x.data||!Array.isArray(x.data.entries)||!Array.isArray(x.data.categories))throw 0;if(confirm('Datensicherung wiederherstellen? Aktuelle Daten werden ersetzt.')){state=x.data;save();alert('Datensicherung wurde wiederhergestellt.')}}catch(_){alert('Diese Datei ist keine gültige Haushaltsbuch-Datensicherung.')}e.target.value=''};
 $('#csv').onclick=()=>{let rows=[['Datum','Buchungsart','Betrag','Kategorie','Verwendungszweck'],...state.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='refund'?'Erstattung':'Ausgabe',String(e.amount).replace('.',','),catById(e.categoryId)?.name||'',e.purpose||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');download(`haushaltsbuch-${today()}.csv`,csv,'text/csv;charset=utf-8')};
 $('#printFiltered').onclick=()=>printReport();

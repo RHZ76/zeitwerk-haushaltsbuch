@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#f7f7f4">
 <title>Haushaltsbuch</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=0.2.9">
+<link rel="stylesheet" href="style.css?v=0.3.0">
 </head>
 <body>
 <div id="splash"><div class="powered">powered by</div><div class="viacruz">viacruz</div></div>
@@ -31,7 +31,10 @@
     <div class="card"><small>AUSGABEN</small><b id="monthExpenses">0,00 €</b><span>dieser Monat</span></div>
     <div class="card"><small>ERSTATTUNGEN</small><b id="monthRefunds">0,00 €</b><span>dieser Monat</span></div>
   </div>
-  <button class="primary big" data-nav="entry">＋ Buchung eintragen</button>
+  <div class="overviewEntryActions">
+    <button class="primary big" data-nav="entry">＋ Buchung eintragen</button>
+    <button id="openSearchFromOverview" class="secondary big" type="button">⌕ Suchen</button>
+  </div>
   <details class="categoriesCard categoriesFold" open>
     <summary>Kategorien</summary>
     <div id="categorySummary"></div>
@@ -40,7 +43,10 @@
 </section>
 
 <section id="entry" class="view">
-  <h2>Buchung eintragen</h2>
+  <div class="toolbar entryToolbar">
+    <h2>Buchung eintragen</h2>
+    <button id="openSearchFromEntry" class="linkBtn" type="button">⌕ Suchen</button>
+  </div>
   <div id="templateNotice" class="templateNotice hidden"></div>
   <form id="entryForm" class="card form">
     <label>Datum<input id="date" type="date" required class="bookingDateInput"></label>
@@ -73,7 +79,7 @@
 <section id="search" class="view">
   <div class="toolbar searchToolbar">
     <h2>Suche</h2>
-    <button id="closeSearch" class="linkBtn">Zurück zu Ausgaben</button>
+    <button id="closeSearch" class="linkBtn">Zurück</button>
   </div>
   <div class="card searchCard">
     <label>Gesamtes Haushaltsbuch durchsuchen
@@ -164,10 +170,10 @@
 </div></div>
 
 <div id="aboutBox" class="sheet hidden"><div class="sheetbox about">
-  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.2.9 SUCHE-VORLAGE</p><hr>
+  <h2>Haushaltsbuch</h2><p>Ausgaben &amp; Erstattungen</p><p>Version 0.3.0 SUCHE-BEIM-EINTRAGEN</p><hr>
   <small>powered by</small><b>viacruz</b><p>viacruz.com</p><button id="closeAbout">Schließen</button>
 </div></div>
 </div>
 
-<script src="app.js?v=0.2.9"></script>
+<script src="app.js?v=0.3.0"></script>
 </body></html>
