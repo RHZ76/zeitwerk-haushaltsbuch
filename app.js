@@ -268,14 +268,11 @@ function renderCategories(){
 function renderAnalytics(){
   let m=$('#analyticsMonth').value||ymNow(),
       list=state.entries.filter(e=>e.date.startsWith(m)),
-      total=Math.max(0,net(list));
+      total=Math.max(0,-net(list));
   $('#analyticsTotal').innerHTML=`<small>GESAMT</small><strong>${euro(total)}</strong><span>Ausgaben ${euro(expenseTotal(list))} · Erstattungen ${euro(refundTotal(list))}</span>`;
 
-  /* Kategorien zeigen nur tatsächlich verbleibende Kosten:
-     Ausgabe minus Erstattung innerhalb derselben Kategorie.
-     Reine/übersteigende Erstattungen werden nicht als positive Kosten dargestellt. */
   let sums=state.categories
-    .map(c=>({c,v:net(list.filter(e=>e.categoryId===c.id))}))
+    .map(c=>({c,v:-net(list.filter(e=>e.categoryId===c.id))}))
     .filter(x=>x.v>0)
     .sort((a,b)=>b.v-a.v);
 
@@ -304,7 +301,7 @@ function renderAnalyticsPie(sums){
   let distributionTotal=positive.reduce((s,x)=>s+x.v,0);
   let month=$('#analyticsMonth').value||ymNow();
   let monthEntries=state.entries.filter(e=>e.date.startsWith(month));
-  let monthTotal=Math.max(0,net(monthEntries));
+  let monthTotal=Math.max(0,-net(monthEntries));
 
   if(!positive.length||distributionTotal<=0){
     pie.style.background='#e8ece9';
