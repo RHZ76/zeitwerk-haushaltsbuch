@@ -268,11 +268,14 @@ function renderCategories(){
 function renderAnalytics(){
   let m=$('#analyticsMonth').value||ymNow(),
       list=state.entries.filter(e=>e.date.startsWith(m)),
-      total=Math.abs(net(list));
-  $('#analyticsTotal').innerHTML=`<small>GESAMTAUSGABEN</small><strong>${euro(total)}</strong><span>Ausgaben ${euro(expenseTotal(list))} · Erstattungen ${euro(refundTotal(list))}</span>`;
+      total=Math.max(0,net(list));
+  $('#analyticsTotal').innerHTML=`<small>GESAMT</small><strong>${euro(total)}</strong><span>Ausgaben ${euro(expenseTotal(list))} · Erstattungen ${euro(refundTotal(list))}</span>`;
 
+  /* Kategorien zeigen nur tatsächlich verbleibende Kosten:
+     Ausgabe minus Erstattung innerhalb derselben Kategorie.
+     Reine/übersteigende Erstattungen werden nicht als positive Kosten dargestellt. */
   let sums=state.categories
-    .map(c=>({c,v:Math.abs(net(list.filter(e=>e.categoryId===c.id)))}))
+    .map(c=>({c,v:net(list.filter(e=>e.categoryId===c.id))}))
     .filter(x=>x.v>0)
     .sort((a,b)=>b.v-a.v);
 
@@ -298,11 +301,14 @@ function renderAnalyticsPie(sums){
   if(!pie||!legend||!center)return;
 
   let positive=sums.filter(x=>x.v>0);
-  let total=positive.reduce((s,x)=>s+x.v,0);
+  let distributionTotal=positive.reduce((s,x)=>s+x.v,0);
+  let month=$('#analyticsMonth').value||ymNow();
+  let monthEntries=state.entries.filter(e=>e.date.startsWith(month));
+  let monthTotal=Math.max(0,net(monthEntries));
 
-  if(!positive.length||total<=0){
+  if(!positive.length||distributionTotal<=0){
     pie.style.background='#e8ece9';
-    center.innerHTML='<b>0,00 €</b><span>Gesamtausgaben</span>';
+    center.innerHTML=`<b>${euro(monthTotal)}</b><span>Gesamt</span>`;
     legend.innerHTML='<div class="analyticsPieEmpty">Noch keine Ausgaben für diesen Monat.</div>';
     return;
   }
@@ -311,15 +317,15 @@ function renderAnalyticsPie(sums){
   let colors=['#168f4d','#64a96f','#a8c96f','#d4b85a','#d98b5f','#bd6f75','#8c78b8','#5f91b5','#67aaa4','#8b9b63'];
   let start=0,parts=[];
   positive.forEach((x,i)=>{
-    let end=start+(x.v/total*100);
+    let end=start+(x.v/distributionTotal*100);
     parts.push(`${colors[i%colors.length]} ${start.toFixed(3)}% ${end.toFixed(3)}%`);
     start=end;
   });
   pie.style.background=`conic-gradient(${parts.join(',')})`;
-  center.innerHTML=`<b>${euro(total)}</b><span>Gesamtausgaben</span>`;
+  center.innerHTML=`<b>${euro(monthTotal)}</b><span>Gesamt</span>`;
 
   legend.innerHTML=positive.map((x,i)=>{
-    let pct=(x.v/total*100);
+    let pct=(x.v/distributionTotal*100);
     return `<div class="analyticsPieLegendRow">
       <i class="analyticsPieLegendDot" style="background:${colors[i%colors.length]}"></i>
       <span class="analyticsPieLegendName">${esc(x.c.name)}</span>
@@ -409,7 +415,7 @@ $('#deleteEntry').onclick=()=>{let id=$('#editId').value;if(confirm('Diesen Eint
 $('#closeEdit').onclick=()=>$('#editBox').classList.add('hidden');
 $('#menuBtn').onclick=()=>$('#menu').classList.remove('hidden');$('#closeMenu').onclick=()=>$('#menu').classList.add('hidden');$('#about').onclick=()=>{$('#menu').classList.add('hidden');$('#aboutBox').classList.remove('hidden')};$('#closeAbout').onclick=()=>$('#aboutBox').classList.add('hidden');
 function download(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.3.1',exported:new Date().toISOString(),data:state},null,2),'application/json');
+$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.3.2',exported:new Date().toISOString(),data:state},null,2),'application/json');
 $('#restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.app!=='Haushaltsbuch'||!x.data||!Array.isArray(x.data.entries)||!Array.isArray(x.data.categories))throw 0;if(confirm('Datensicherung wiederherstellen? Aktuelle Daten werden ersetzt.')){state=x.data;save();alert('Datensicherung wurde wiederhergestellt.')}}catch(_){alert('Diese Datei ist keine gültige Haushaltsbuch-Datensicherung.')}e.target.value=''};
 $('#csv').onclick=()=>{let rows=[['Datum','Buchungsart','Betrag','Kategorie','Verwendungszweck'],...state.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='refund'?'Erstattung':'Ausgabe',String(e.amount).replace('.',','),catById(e.categoryId)?.name||'',e.purpose||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');download(`haushaltsbuch-${today()}.csv`,csv,'text/csv;charset=utf-8')};
 $('#printFiltered').onclick=()=>printReport();
