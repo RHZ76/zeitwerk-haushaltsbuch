@@ -585,3 +585,31 @@ label.filelabel{
     gap:8px;
   }
 }
+
+/* v0.3.4: Auswertung – Kategorien direkt in der vorhandenen Karte ausklappen */
+.analyticsInlineDetail{
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid var(--line);
+}
+.analyticsInlineHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+  color:var(--muted);
+  font-size:12px;
+}
+.analyticsInlineDetail .row{
+  background:#fff;
+}
+.analyticsChevron{
+  display:inline-block;
+  min-width:14px;
+  text-align:center;
+}
+@media(max-width:390px){
+  .analyticsInlineHeader{align-items:center;flex-direction:row}
+  .analyticsInlineHeader .analyticsPrintBtn{width:auto}
+}

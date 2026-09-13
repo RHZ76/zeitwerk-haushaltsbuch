@@ -18,7 +18,13 @@ function save(){localStorage.setItem(STORE,JSON.stringify(state));render()}
 function net(list){return list.reduce((a,e)=>a+(e.type==='refund'?+e.amount:-e.amount),0)}
 function expenseTotal(list){return list.filter(e=>e.type==='expense').reduce((a,e)=>a+(+e.amount||0),0)}
 function refundTotal(list){return list.filter(e=>e.type==='refund').reduce((a,e)=>a+(+e.amount||0),0)}
-function nav(id){$$('.view').forEach(v=>v.classList.toggle('active',v.id===id));$$('nav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===id));render()}
+function nav(id){
+  // Die Auswertung startet bei jedem neuen Öffnen immer vollständig zugeklappt.
+  if(id==='analytics' && !$('#analytics')?.classList.contains('active')) openAnalyticsCategoryId=null;
+  $$('.view').forEach(v=>v.classList.toggle('active',v.id===id));
+  $$('nav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===id));
+  render();
+}
 function clearEntryTemplate(){
   entryTemplateSource=null;
   let n=$('#templateNotice');
@@ -281,20 +287,52 @@ function renderAnalytics(){
 
   let max=Math.max(1,...sums.map(x=>x.v));
   renderAnalyticsPie(sums);
+
   $('#analyticsCategories').innerHTML=sums.length
-    ? sums.map(x=>`<div class="analyticsRow clickable ${openAnalyticsCategoryId===x.c.id?'active':''}" data-analytics-cat="${x.c.id}">
-        <div class="analyticsTop"><b>${esc(x.c.name)}</b><span>${euro(x.v)} <i class="analyticsChevron">›</i></span></div>
-        <div class="bar"><i style="width:${Math.max(3,x.v/max*100)}%"></i></div>
-      </div>`).join('')
+    ? sums.map(x=>{
+        let isOpen=openAnalyticsCategoryId===x.c.id;
+        let rows=list.filter(e=>e.categoryId===x.c.id)
+          .sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created);
+        let monthName=new Date(m+'-01T12:00:00').toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+        return `<div class="analyticsRow clickable ${isOpen?'active':''}" data-analytics-cat="${x.c.id}">
+          <div class="analyticsTop">
+            <b>${esc(x.c.name)}</b>
+            <span>${euro(x.v)} <i class="analyticsChevron">${isOpen?'⌄':'›'}</i></span>
+          </div>
+          <div class="bar"><i style="width:${Math.max(3,x.v/max*100)}%"></i></div>
+          ${isOpen?`<div class="analyticsInlineDetail" data-analytics-detail="${x.c.id}">
+            <div class="analyticsInlineHeader">
+              <span>${esc(monthName)} · ${rows.length} ${rows.length===1?'Buchung':'Buchungen'}</span>
+              <button class="analyticsPrintBtn" type="button" data-print-analytics-cat="${x.c.id}">Drucken</button>
+            </div>
+            <div>${rows.map(rowHTML).join('')}</div>
+            <div class="detailTotal"><span>Gesamt ${esc(x.c.name)}</span><span>${euro(expenseTotal(rows)-refundTotal(rows))}</span></div>
+          </div>`:''}
+        </div>`;
+      }).join('')
     : '<div class="hint">Noch keine Daten für diesen Monat.</div>';
 
-  $$('[data-analytics-cat]').forEach(el=>el.onclick=()=>{
+  $$('[data-analytics-cat]').forEach(el=>el.onclick=e=>{
+    // Buchungen und Druckknopf haben ihre eigene Aktion.
+    if(e.target.closest('.row[data-id], [data-print-analytics-cat]'))return;
     let id=el.dataset.analyticsCat;
     openAnalyticsCategoryId=openAnalyticsCategoryId===id?null:id;
     renderAnalytics();
   });
 
-  renderAnalyticsDetail(m,list);
+  $$('#analyticsCategories .row[data-id]').forEach(r=>r.onclick=e=>{
+    e.stopPropagation();
+    openEdit(r.dataset.id);
+  });
+
+  $$('[data-print-analytics-cat]').forEach(btn=>btn.onclick=e=>{
+    e.stopPropagation();
+    printAnalyticsCategory(m,btn.dataset.printAnalyticsCat);
+  });
+
+  // Die alte separate Detailkarte unterhalb der Kategorien wird nicht mehr benutzt.
+  let oldDetail=$('#analyticsDetail');
+  if(oldDetail)oldDetail.innerHTML='';
 }
 function renderAnalyticsPie(sums){
   let pie=$('#analyticsPie'),legend=$('#analyticsPieLegend'),center=$('#analyticsPieCenter');
@@ -415,7 +453,7 @@ $('#deleteEntry').onclick=()=>{let id=$('#editId').value;if(confirm('Diesen Eint
 $('#closeEdit').onclick=()=>$('#editBox').classList.add('hidden');
 $('#menuBtn').onclick=()=>$('#menu').classList.remove('hidden');$('#closeMenu').onclick=()=>$('#menu').classList.add('hidden');$('#about').onclick=()=>{$('#menu').classList.add('hidden');$('#aboutBox').classList.remove('hidden')};$('#closeAbout').onclick=()=>$('#aboutBox').classList.add('hidden');
 function download(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.3.3',exported:new Date().toISOString(),data:state},null,2),'application/json');
+$('#backup').onclick=()=>download(`haushaltsbuch-backup-${today()}.json`,JSON.stringify({app:'Haushaltsbuch',schema:1,version:'0.3.4',exported:new Date().toISOString(),data:state},null,2),'application/json');
 $('#restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.app!=='Haushaltsbuch'||!x.data||!Array.isArray(x.data.entries)||!Array.isArray(x.data.categories))throw 0;if(confirm('Datensicherung wiederherstellen? Aktuelle Daten werden ersetzt.')){state=x.data;save();alert('Datensicherung wurde wiederhergestellt.')}}catch(_){alert('Diese Datei ist keine gültige Haushaltsbuch-Datensicherung.')}e.target.value=''};
 $('#csv').onclick=()=>{let rows=[['Datum','Buchungsart','Betrag','Kategorie','Verwendungszweck'],...state.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='refund'?'Erstattung':'Ausgabe',String(e.amount).replace('.',','),catById(e.categoryId)?.name||'',e.purpose||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');download(`haushaltsbuch-${today()}.csv`,csv,'text/csv;charset=utf-8')};
 $('#printFiltered').onclick=()=>printReport();
